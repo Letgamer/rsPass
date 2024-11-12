@@ -13,6 +13,7 @@ serde = "1.0.215"
 utoipa = { version = "5.2.0", features = ["actix_extras"] }
 utoipa-swagger-ui = { version = "8.0.3", features = ["actix-web"] }
 utoipa-actix-web = "0.1.2"
+rusqlite = { version = "0.32.1", features = ["bundled"] }
 
 [profile.dev]
 debug = true

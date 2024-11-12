@@ -7,9 +7,12 @@ use utoipa_swagger_ui::SwaggerUi;
 use utoipa_actix_web::AppExt;
 use utoipa::OpenApi;
 
+mod auth;
+mod db;
 mod models;
 mod routes;
 use crate::routes::*;
+use crate::db::initialize_database;
 
 fn get_server_config() -> (String, String) {
     let host = env::var("HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
@@ -21,7 +24,10 @@ fn get_server_config() -> (String, String) {
 async fn main() -> std::io::Result<()> {
     dotenv().ok();
     env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
-    
+    let database_location = env::var("DB_FILE").unwrap_or_else(|_| "./database.db".to_string());
+
+    initialize_database(&database_location);
+
     let (host, port) = get_server_config();
     info!("Starting server at {}:{}", host, port);
 
