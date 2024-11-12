@@ -7,8 +7,9 @@ use utoipa_swagger_ui::SwaggerUi;
 use utoipa_actix_web::AppExt;
 use utoipa::OpenApi;
 
+mod models;
 mod routes;
-use routes::*;
+use crate::routes::*;
 
 fn get_server_config() -> (String, String) {
     let host = env::var("HOST").unwrap_or_else(|_| "0.0.0.0".to_string());

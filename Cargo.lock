@@ -309,6 +309,7 @@ dependencies = [
  "dotenv",
  "env_logger",
  "log",
+ "serde",
  "serde_json",
  "utoipa",
  "utoipa-actix-web",
