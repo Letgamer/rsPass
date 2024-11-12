@@ -1,5 +1,6 @@
 use actix_web::{middleware::Logger, App, HttpServer};
 use env_logger::Env;
+use dotenv::dotenv;
 use log::info;
 use std::env;
 use utoipa_swagger_ui::SwaggerUi;
@@ -17,6 +18,7 @@ fn get_server_config() -> (String, String) {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    dotenv().ok();
     env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
     
     let (host, port) = get_server_config();
