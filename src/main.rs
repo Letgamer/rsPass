@@ -19,14 +19,18 @@ fn get_server_config() -> (String, String) {
     let port = env::var("PORT").unwrap_or_else(|_| "8080".to_string());
     (host, port)
 }
+pub fn get_db_path() -> String {
+    env::var("DB_FILE").unwrap_or_else(|_| "./database.db".to_string())
+}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv().ok();
     env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
-    let database_location = env::var("DB_FILE").unwrap_or_else(|_| "./database.db".to_string());
-
-    initialize_database(&database_location);
+    let db_path = get_db_path();
+    
+    info!("Initiating the database located at:{} ",db_path);
+    initialize_database(&db_path);
 
     let (host, port) = get_server_config();
     info!("Starting server at {}:{}", host, port);
@@ -36,6 +40,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(Logger::default())
             .into_utoipa_app()
             .service(route_health)
+            .service(route_email)
             .split_for_parts();
 
         app.service(

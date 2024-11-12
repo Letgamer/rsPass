@@ -1,5 +1,7 @@
-use actix_web::{get, post, HttpResponse, Responder};
+use actix_web::{get, post, HttpResponse, Responder, web};
 use utoipa::{OpenApi};
+use log::{error, debug, info};
+use crate::db::user_exists;
 
 use crate::models::*;
 
@@ -37,11 +39,27 @@ pub async fn route_health() -> impl Responder {
 #[utoipa::path(
     request_body = PreLoginRequest,
     responses(
-        (status = 200, description = "Pre-login check successful")
+        (status = 200, description = "User with this email already exists"),
+        (status = 404, description = "No User with this email exists")
     ),
     tag = "accounts"
 )]
-#[post("/api/accounts/prelogin")]
-pub async fn route_email() -> impl Responder {
-    HttpResponse::Ok().finish()
+#[post("/api/accounts/checkmail")]
+pub async fn route_email(req_body: web::Json<PreLoginRequest>) -> impl Responder {
+    let email = &req_body.email;
+    info!("Email extracted: {}", email);
+    match user_exists(email) {
+        Ok(exists) => {
+            if exists {
+                HttpResponse::Ok().finish() // User exists
+            } else {
+                HttpResponse::NotFound().finish() // User does not exist
+            }
+        },
+        Err(e) => {
+            // Step 4: Handle any errors from the database query
+            error!("Database error: {}", e);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
 }

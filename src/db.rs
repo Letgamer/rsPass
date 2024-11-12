@@ -1,9 +1,10 @@
-use log::{error, info};
-use rusqlite::Connection;
+use log::{error, info, debug};
+use rusqlite::{Connection, params, Result};
 use std::path::Path;
 use std::process;
 use std::fs::OpenOptions;
 use std::io::ErrorKind;
+use crate::get_db_path;
 
 pub fn initialize_database(db_path: &str) {
     if !Path::new(db_path).exists() {
@@ -13,8 +14,8 @@ pub fn initialize_database(db_path: &str) {
             conn.execute(
                 "CREATE TABLE IF NOT EXISTS users (
                     email TEXT PRIMARY KEY,
-                    password TEXT NOT NULL,
-                    data TEXT NOT NULL
+                    password_hash TEXT NOT NULL,
+                    encrypted_data TEXT NOT NULL
                 );",
                 [],
             )
@@ -47,4 +48,16 @@ pub fn initialize_database(db_path: &str) {
             }
         }
     }
+}
+
+pub fn user_exists(email: &str) -> Result<bool> {
+    let mut conn = Connection::open(get_db_path())?;
+    let txn = conn.transaction()?;
+    debug!("Fetching user with email: {}", email);
+    let exists: bool = txn.query_row(
+        "SELECT EXISTS(SELECT 1 FROM users WHERE email = ?1)",
+        params![email],
+        |row| row.get(0),
+    )?;
+    Ok(exists)
 }
