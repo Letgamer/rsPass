@@ -59,5 +59,6 @@ pub fn user_exists(email: &str) -> Result<bool> {
         params![email],
         |row| row.get(0),
     )?;
+    txn.commit()?;
     Ok(exists)
 }
