@@ -62,3 +62,16 @@ pub fn user_exists(email: &str) -> Result<bool> {
     txn.commit()?;
     Ok(exists)
 }
+
+pub fn user_login(email: &str, password_hash: &str) -> Result<bool> {
+    let mut conn = Connection::open(get_db_path())?;
+    let txn = conn.transaction()?;
+    debug!("Logging in user with email: {}", email);
+    let exists: bool = txn.query_row(
+        "SELECT EXISTS(SELECT 1 FROM users WHERE email = ?1 AND password_hash = ?2)",
+        params![email, password_hash],
+        |row| row.get(0),
+    )?;
+    txn.commit()?;
+    Ok(exists)
+}

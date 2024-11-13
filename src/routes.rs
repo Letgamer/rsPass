@@ -3,6 +3,7 @@ use utoipa::{OpenApi};
 use log::{error, debug};
 use validator::Validate;
 use crate::db::user_exists;
+use crate::db::user_login;
 use crate::models::*;
 
 // API Documentation struct
@@ -49,8 +50,8 @@ pub async fn route_health() -> impl Responder {
     responses(
         (status = 200, description = "User with this email already exists"),
         (status = 404, description = "No User with this email exists"),
-        (status = 400, description = "Invalid email format"),
-        (status = 422, description = "Invalid JSON payload")
+        (status = 400, description = "Invalid payload"),
+        (status = 500, description = "Database Error")
     ),
     tag = "accounts"
 )]
@@ -64,14 +65,9 @@ pub async fn route_email(req_body: web::Json<PreLoginRequest>) -> impl Responder
     debug!("Email extracted: {}", email);
     
     match user_exists(email) {
-        Ok(exists) => {
-            if exists {
-                HttpResponse::Ok().finish() // User exists
-            } else {
-                HttpResponse::NotFound().finish() // User does not exist
-            }
-        },
-        Err(e) => handle_db_error(e),
+        Ok(true) => HttpResponse::Ok().finish(), // User exists
+        Ok(false) => HttpResponse::NotFound().finish(), // User does not exist
+        Err(e) => handle_db_error(&e),
     }
 }
 
@@ -80,9 +76,10 @@ pub async fn route_email(req_body: web::Json<PreLoginRequest>) -> impl Responder
     request_body = LoginRequest,
     responses(
         (status = 200, description = "User authenticated, JWT generated"),
+        (status = 400, description = "Invalid payload"),
         (status = 401, description = "Invalid email or password"),
-        (status = 400, description = "Invalid email format"),
-        (status = 422, description = "Invalid JSON payload")
+        (status = 404, description = "User with that email doesn't exist"),
+        (status = 500, description = "Database Error")
     ),
     tag = "accounts"
 )]
@@ -96,15 +93,15 @@ pub async fn route_login(req_body: web::Json<LoginRequest>) -> impl Responder {
     let password_hash = &req_body.password_hash;
     debug!("Login attempt for email: {}", email);
 
-    match user_exists(email) {
-        Ok(exists) => {
-            if exists {
-                //TODO: Add actual login logic (JWT generation)
-                HttpResponse::Ok().finish() // User exists
-            } else {
-                HttpResponse::Unauthorized().finish() // User does not exist
+    match user_login(email, password_hash) {
+        Ok(true) => HttpResponse::Ok().finish(), // User exists and login is successful
+        Ok(false) => {
+            match user_exists(email) {
+                Ok(true) => HttpResponse::Unauthorized().finish(), // User exists but incorrect password
+                Ok(false) => HttpResponse::NotFound().finish(), // User does not exist
+                Err(e) => handle_db_error(&e),
             }
-        },
-        Err(e) => handle_db_error(e),
+        }
+        Err(e) => handle_db_error(&e),
     }
 }
