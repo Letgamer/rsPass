@@ -41,6 +41,7 @@ async fn main() -> std::io::Result<()> {
             .into_utoipa_app()
             .service(route_health)
             .service(route_email)
+            .service(route_login)
             .split_for_parts();
 
         app.service(
