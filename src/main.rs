@@ -1,4 +1,4 @@
-use actix_web::{middleware::Logger, App, HttpServer};
+use actix_web::{middleware::Logger, App, HttpServer, web};
 use env_logger::Env;
 use dotenv::dotenv;
 use log::info;
@@ -13,6 +13,7 @@ mod models;
 mod routes;
 use crate::routes::*;
 use crate::db::initialize_database;
+use crate::auth::JwtAuth;
 
 fn get_server_config() -> (String, String) {
     let host = env::var("HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
@@ -35,9 +36,13 @@ async fn main() -> std::io::Result<()> {
     let (host, port) = get_server_config();
     info!("Starting server at {}:{}", host, port);
 
-    HttpServer::new(|| {
+    // Create JWT auth instance to share across workers
+    let jwt_auth = web::Data::new(JwtAuth::new());
+
+    HttpServer::new(move|| {
         let (app, _api_doc) = App::new()
             .wrap(Logger::default())
+            .app_data(jwt_auth.clone())
             .into_utoipa_app()
             .service(route_health)
             .service(route_email)

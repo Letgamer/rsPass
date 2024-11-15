@@ -5,6 +5,7 @@ use validator::Validate;
 use crate::db::user_exists;
 use crate::db::user_login;
 use crate::models::*;
+use crate::auth::JwtAuth;
 
 // API Documentation struct
 #[derive(OpenApi)]
@@ -75,16 +76,16 @@ pub async fn route_email(req_body: web::Json<PreLoginRequest>) -> impl Responder
 #[utoipa::path(
     request_body = LoginRequest,
     responses(
-        (status = 200, description = "User authenticated, JWT generated"),
+        (status = 200, description = "User authenticated, JWT generated", body=LoginResponse),
         (status = 400, description = "Invalid payload"),
         (status = 401, description = "Invalid email or password"),
         (status = 404, description = "User with that email doesn't exist"),
-        (status = 500, description = "Database Error")
+        (status = 500, description = "Database Error or JWT Generation Error")
     ),
     tag = "accounts"
 )]
 #[post("/api/login")]
-pub async fn route_login(req_body: web::Json<LoginRequest>) -> impl Responder {
+pub async fn route_login(req_body: web::Json<LoginRequest>, jwt_auth: web::Data<JwtAuth>) -> impl Responder {
     if let Err(response) = validate_format(&req_body) {
         return response;
     }
@@ -94,7 +95,15 @@ pub async fn route_login(req_body: web::Json<LoginRequest>) -> impl Responder {
     debug!("Login attempt for email: {}", email);
 
     match user_login(email, password_hash) {
-        Ok(true) => HttpResponse::Ok().finish(), // User exists and login is successful
+        Ok(true) => {
+            match jwt_auth.generate_token(email) {
+                Ok(token) => HttpResponse::Ok().json(LoginResponse { token }),
+                Err(e) => {
+                    error!("Failed to generate token: {}", e);
+                    HttpResponse::InternalServerError().finish()
+                }
+            }
+        }
         Ok(false) => {
             match user_exists(email) {
                 Ok(true) => HttpResponse::Unauthorized().finish(), // User exists but incorrect password

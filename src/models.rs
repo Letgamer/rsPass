@@ -17,3 +17,8 @@ pub struct LoginRequest {
     // Set password_hash to a specific Length!
     pub password_hash: String,
 }
+
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct LoginResponse {
+    pub token: String,
+}
