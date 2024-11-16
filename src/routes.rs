@@ -4,18 +4,20 @@ use log::{error, debug};
 use validator::Validate;
 use crate::db::user_exists;
 use crate::db::user_login;
+use crate::db::user_register;
 use crate::models::*;
 use crate::auth::JwtAuth;
 
 // API Documentation struct
 #[derive(OpenApi)]
 #[openapi(
-    paths(route_health, route_email, route_login),
+    paths(route_health, route_email, route_login, route_register),
     tags(
         (name = "health", description = "Health check endpoints"),
+        (name = "auth", description = "Authentication Endpoints"),
         (name = "accounts", description = "Account management endpoints")
     ),
-    components(schemas(PreLoginRequest, LoginRequest))
+    components(schemas(PreLoginRequest, LoginRequest, LoginResponse))
 )]
 pub struct ApiDoc;
 
@@ -82,9 +84,9 @@ pub async fn route_email(req_body: web::Json<PreLoginRequest>) -> impl Responder
         (status = 404, description = "User with that email doesn't exist"),
         (status = 500, description = "Database Error or JWT Generation Error")
     ),
-    tag = "accounts"
+    tag = "auth"
 )]
-#[post("/api/login")]
+#[post("/api/auth/login")]
 pub async fn route_login(req_body: web::Json<LoginRequest>, jwt_auth: web::Data<JwtAuth>) -> impl Responder {
     if let Err(response) = validate_format(&req_body) {
         return response;
@@ -108,6 +110,46 @@ pub async fn route_login(req_body: web::Json<LoginRequest>, jwt_auth: web::Data<
             match user_exists(email) {
                 Ok(true) => HttpResponse::Unauthorized().finish(), // User exists but incorrect password
                 Ok(false) => HttpResponse::NotFound().finish(), // User does not exist
+                Err(e) => handle_db_error(&e),
+            }
+        }
+        Err(e) => handle_db_error(&e),
+    }
+}
+
+// Log in route, with JWT generation (to be implemented)
+#[utoipa::path(
+    request_body = RegisterRequest,
+    responses(
+        (status = 200, description = "User created and authenticated, JWT generated", body=LoginResponse),
+        (status = 400, description = "Invalid payload"),
+        (status = 401, description = "User already exists"),
+        (status = 500, description = "Database Error or JWT Generation Error")
+    ),
+    tag = "auth"
+)]
+#[post("/api/auth/register")]
+pub async fn route_register(req_body: web::Json<LoginRequest>, jwt_auth: web::Data<JwtAuth>) -> impl Responder {
+    if let Err(response) = validate_format(&req_body) {
+        return response;
+    }
+
+    let email = &req_body.email;
+    let password_hash = &req_body.password_hash;
+    debug!("Register attempt for email: {}", email);
+    match user_exists(email) {
+        Ok(true) => HttpResponse::Unauthorized().finish(),
+        Ok(false) => {
+            match user_register(email, password_hash) {
+                Ok(()) => {
+                    match jwt_auth.generate_token(email) {
+                        Ok(token) => HttpResponse::Ok().json(LoginResponse { token }),
+                        Err(e) => {
+                            error!("Failed to generate token: {}", e);
+                            HttpResponse::InternalServerError().finish()
+                        }
+                    }
+                }
                 Err(e) => handle_db_error(&e),
             }
         }

@@ -15,7 +15,7 @@ pub fn initialize_database(db_path: &str) {
                 "CREATE TABLE IF NOT EXISTS users (
                     email TEXT PRIMARY KEY,
                     password_hash TEXT NOT NULL,
-                    encrypted_data TEXT NOT NULL
+                    encrypted_data TEXT DEFAULT ''
                 );",
                 [],
             )
@@ -74,4 +74,18 @@ pub fn user_login(email: &str, password_hash: &str) -> Result<bool> {
     )?;
     txn.commit()?;
     Ok(exists)
+}
+
+pub fn user_register(email: &str, password_hash: &str) -> Result<(), rusqlite::Error> {
+    let mut conn = Connection::open(get_db_path())?;
+    let txn = conn.transaction()?;
+    debug!("Registering user with email: {}", email);
+
+    txn.execute(
+        "INSERT INTO users (email, password_hash) VALUES (?1, ?2)",
+        params![email, password_hash],
+    )?;
+
+    txn.commit()?;
+    Ok(())
 }

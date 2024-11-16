@@ -47,6 +47,7 @@ async fn main() -> std::io::Result<()> {
             .service(route_health)
             .service(route_email)
             .service(route_login)
+            .service(route_register)
             .split_for_parts();
 
         app.service(

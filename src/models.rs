@@ -22,3 +22,12 @@ pub struct LoginRequest {
 pub struct LoginResponse {
     pub token: String,
 }
+
+#[derive(Debug, Serialize, Deserialize, ToSchema, Validate)]
+pub struct RegisterRequest {
+    #[schema(format = "email")]
+    #[validate(email)]
+    pub email: String,
+    // Set password_hash to a specific Length!
+    pub password_hash: String,
+}
