@@ -66,7 +66,7 @@ pub fn user_exists(email: &str) -> Result<bool> {
 pub fn user_login(email: &str, password_hash: &str) -> Result<bool> {
     let mut conn = Connection::open(get_db_path())?;
     let txn = conn.transaction()?;
-    debug!("Logging in user with email: {}", email);
+    debug!("Logging in user with email: {} in database", email);
     let exists: bool = txn.query_row(
         "SELECT EXISTS(SELECT 1 FROM users WHERE email = ?1 AND password_hash = ?2)",
         params![email, password_hash],
@@ -79,7 +79,7 @@ pub fn user_login(email: &str, password_hash: &str) -> Result<bool> {
 pub fn user_register(email: &str, password_hash: &str) -> Result<(), rusqlite::Error> {
     let mut conn = Connection::open(get_db_path())?;
     let txn = conn.transaction()?;
-    debug!("Registering user with email: {}", email);
+    debug!("Registering user with email: {} in database", email);
 
     txn.execute(
         "INSERT INTO users (email, password_hash) VALUES (?1, ?2)",
