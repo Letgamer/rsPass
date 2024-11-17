@@ -8,7 +8,7 @@ use crate::db::user_register;
 use crate::db::user_changepwd;
 use crate::models::*;
 use crate::auth::{JwtAuth};
-use actix_web_httpauth::{extractors::bearer::BearerAuth, middleware::HttpAuthentication};
+use actix_web_httpauth::{extractors::bearer::BearerAuth};
 use crate::auth::Claims;
 use actix_web::HttpRequest;
 use actix_web::HttpMessage;

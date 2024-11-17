@@ -6,8 +6,11 @@ use std::env;
 use utoipa_swagger_ui::SwaggerUi;
 use utoipa_actix_web::AppExt;
 use utoipa::OpenApi;
-use actix_web_httpauth::{extractors::bearer::BearerAuth, middleware::HttpAuthentication};
+use actix_web_httpauth::{middleware::HttpAuthentication};
 use utoipa_actix_web::scope;
+use tokio::spawn;
+use tokio::time;
+use tokio::time::Duration;
 
 mod auth;
 mod db;
@@ -40,9 +43,19 @@ async fn main() -> std::io::Result<()> {
 
     // Create JWT auth instance to share across workers
     let jwt_auth = web::Data::new(JwtAuth::new());
+    let jwt_auth_clone = jwt_auth.clone();
+
+    spawn(async move {
+        let mut interval = time::interval(Duration::from_secs(600)); // 30 minutes
+        loop {
+            interval.tick().await;
+            info!("Running blacklist cleanup...");
+            JwtAuth::cleanup_blacklist(&jwt_auth_clone);
+        }
+    });
 
     HttpServer::new(move|| {
-        let auth = HttpAuthentication::with_fn(auth::validator);
+        let auth = HttpAuthentication::with_fn(validator);
         let (app, _api_doc) = App::new()
             .wrap(Logger::default())
             .app_data(jwt_auth.clone())

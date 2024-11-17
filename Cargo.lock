@@ -330,6 +330,7 @@ dependencies = [
  "rusqlite",
  "serde",
  "serde_json",
+ "tokio",
  "utoipa",
  "utoipa-actix-web",
  "utoipa-swagger-ui",

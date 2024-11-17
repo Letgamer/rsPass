@@ -1,9 +1,6 @@
 use actix_web::{dev::ServiceRequest, Error, error};
 use actix_web::HttpMessage;
-use actix_web_httpauth::{
-    extractors::bearer::BearerAuth,
-    middleware::HttpAuthentication,
-};
+use actix_web_httpauth::{extractors::bearer::BearerAuth};
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation, errors::Error as JwtError};
 use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -55,6 +52,27 @@ impl JwtAuth {
     pub fn is_blacklisted(&self, token: &str) -> bool {
         let blacklist = BLACKLIST.lock().unwrap();
         blacklist.contains(token)
+    }
+
+    pub fn blacklist_token(&self, token: &str) {
+        let mut blacklist = BLACKLIST.lock().unwrap();
+        blacklist.insert(token.to_string());
+    }
+
+    pub fn cleanup_blacklist(&self) {
+        let mut blacklist = BLACKLIST.lock().unwrap();
+        let current_time = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs() as usize;
+
+        blacklist.retain(|token| {
+            if let Ok(claims) = self.validate_token(token) {
+                claims.exp > current_time
+            } else {
+                false
+            }
+        });
     }
 
     pub fn validate_token(&self, token: &str) -> Result<Claims, JwtError> {
