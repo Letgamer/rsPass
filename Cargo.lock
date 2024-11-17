@@ -326,6 +326,7 @@ dependencies = [
  "env_logger",
  "jsonwebtoken",
  "log",
+ "once_cell",
  "rusqlite",
  "serde",
  "serde_json",

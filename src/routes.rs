@@ -1,23 +1,29 @@
 use actix_web::{get, post, HttpResponse, Responder, web};
 use utoipa::{OpenApi};
-use log::{error, debug};
+use log::{error, debug, info};
 use validator::Validate;
 use crate::db::user_exists;
 use crate::db::user_login;
 use crate::db::user_register;
+use crate::db::user_changepwd;
 use crate::models::*;
-use crate::auth::JwtAuth;
+use crate::auth::{JwtAuth};
+use actix_web_httpauth::{extractors::bearer::BearerAuth, middleware::HttpAuthentication};
+use crate::auth::Claims;
+use actix_web::HttpRequest;
+use actix_web::HttpMessage;
 
 // API Documentation struct
 #[derive(OpenApi)]
 #[openapi(
-    paths(route_health, route_email, route_login, route_register),
+    paths(route_health, route_email, route_login, route_register, route_changepwd),
     tags(
         (name = "health", description = "Health check endpoints"),
         (name = "auth", description = "Authentication Endpoints"),
         (name = "accounts", description = "Account management endpoints")
     ),
-    components(schemas(PreLoginRequest, LoginRequest, LoginResponse))
+    components(schemas(PreLoginRequest, LoginRequest, LoginResponse, ChangeRequest)),
+    modifiers(&SecurityAddon)
 )]
 pub struct ApiDoc;
 
@@ -117,7 +123,6 @@ pub async fn route_login(req_body: web::Json<LoginRequest>, jwt_auth: web::Data<
     }
 }
 
-// Log in route, with JWT generation (to be implemented)
 #[utoipa::path(
     request_body = RegisterRequest,
     responses(
@@ -154,5 +159,42 @@ pub async fn route_register(req_body: web::Json<LoginRequest>, jwt_auth: web::Da
             }
         }
         Err(e) => handle_db_error(&e),
+    }
+}
+
+
+#[utoipa::path(
+    post,
+    path = "/api/accounts/changepwd",
+    request_body = ChangeRequest,
+    responses(
+        (status = 200, description = "Password changed successfully!"),
+        (status = 400, description = "Invalid payload"),
+        (status = 401, description = "JWT Token is invalid"),
+        (status = 500, description = "Database Error or JWT Generation Error")
+    ),
+    tag = "accounts",
+    security(
+        ("jwt_auth" = [])
+    )
+)]
+pub async fn route_changepwd(
+    req: HttpRequest,
+    req_body: web::Json<ChangeRequest>,
+    auth: BearerAuth
+) -> impl Responder {
+    info!("authenticated for token: {}", auth.token().to_owned());
+    if let Some(claims) = req.extensions_mut().get::<Claims>() {
+        // Now you can use the claims data
+        let user_email = &claims.sub;
+        let password_hash = &req_body.password_hash;
+        info!("JWT email provided: {}", user_email);
+        match user_changepwd(user_email, password_hash){
+            Ok(()) => HttpResponse::Ok().finish(),
+            Err(e) => handle_db_error(&e),
+        }
+    }
+    else {
+        HttpResponse::InternalServerError().finish()
     }
 }

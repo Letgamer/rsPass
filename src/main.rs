@@ -6,6 +6,8 @@ use std::env;
 use utoipa_swagger_ui::SwaggerUi;
 use utoipa_actix_web::AppExt;
 use utoipa::OpenApi;
+use actix_web_httpauth::{extractors::bearer::BearerAuth, middleware::HttpAuthentication};
+use utoipa_actix_web::scope;
 
 mod auth;
 mod db;
@@ -13,7 +15,7 @@ mod models;
 mod routes;
 use crate::routes::*;
 use crate::db::initialize_database;
-use crate::auth::JwtAuth;
+use crate::auth::{JwtAuth, validator};
 
 fn get_server_config() -> (String, String) {
     let host = env::var("HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
@@ -40,6 +42,7 @@ async fn main() -> std::io::Result<()> {
     let jwt_auth = web::Data::new(JwtAuth::new());
 
     HttpServer::new(move|| {
+        let auth = HttpAuthentication::with_fn(auth::validator);
         let (app, _api_doc) = App::new()
             .wrap(Logger::default())
             .app_data(jwt_auth.clone())
@@ -48,6 +51,11 @@ async fn main() -> std::io::Result<()> {
             .service(route_email)
             .service(route_login)
             .service(route_register)
+            .service(
+                scope("/api/accounts")
+                    .wrap(auth)
+                    .route("/changepwd", web::post().to(route_changepwd)),
+            )
             .split_for_parts();
 
         app.service(

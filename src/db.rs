@@ -89,3 +89,16 @@ pub fn user_register(email: &str, password_hash: &str) -> Result<(), rusqlite::E
     txn.commit()?;
     Ok(())
 }
+
+pub fn user_changepwd(email: &str, password_hash: &str) -> Result<(), rusqlite::Error> {
+    let mut conn = Connection::open(get_db_path())?;
+    let txn = conn.transaction()?;
+    info!("Changing Password of user with email: {} in database", email);
+    txn.execute(
+        "UPDATE users SET password_hash = ?1 WHERE email = ?2",
+        params![password_hash, email],
+    )?;
+
+    txn.commit()?;
+    Ok(())
+}

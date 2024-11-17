@@ -1,6 +1,23 @@
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use validator::Validate;
+use utoipa::openapi::security::{SecurityScheme, HttpAuthScheme, HttpBuilder};
+
+pub struct SecurityAddon;
+
+impl utoipa::Modify for SecurityAddon {
+    fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
+        let components = openapi.components.get_or_insert_with(Default::default);
+        components.security_schemes.insert(
+            "jwt_auth".to_string(),
+            SecurityScheme::Http(HttpBuilder::new()
+                .scheme(HttpAuthScheme::Bearer) // Use HttpAuthScheme::Bearer here
+                .bearer_format("JWT")
+                .description(Some("Enter JWT token"))
+                .build()),
+        );
+    }
+}
 
 #[derive(Debug, Serialize, Deserialize, ToSchema, Validate)]
 pub struct PreLoginRequest {
@@ -31,3 +48,9 @@ pub struct RegisterRequest {
     // Set password_hash to a specific Length!
     pub password_hash: String,
 }
+
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct ChangeRequest {
+    pub password_hash: String,
+}
+

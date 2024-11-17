@@ -1,11 +1,26 @@
+use actix_web::{dev::ServiceRequest, Error, error};
+use actix_web::HttpMessage;
+use actix_web_httpauth::{
+    extractors::bearer::BearerAuth,
+    middleware::HttpAuthentication,
+};
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation, errors::Error as JwtError};
 use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
+use std::collections::HashSet;
+use std::sync::Mutex;
+use once_cell::sync::Lazy;
 use std::env;
+use log::info;
+
+use crate::db::user_exists;
+
+// Store blacklisted tokens
+static BLACKLIST: Lazy<Mutex<HashSet<String>>> = Lazy::new(|| Mutex::new(HashSet::new()));
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
-    sub: String,  // email
+    pub sub: String,  // email
     exp: usize,   // expiration time
 }
 
@@ -36,4 +51,46 @@ impl JwtAuth {
 
         encode(&Header::default(), &my_claims, &self.encoding_key)
     }
+
+    pub fn is_blacklisted(&self, token: &str) -> bool {
+        let blacklist = BLACKLIST.lock().unwrap();
+        blacklist.contains(token)
+    }
+
+    pub fn validate_token(&self, token: &str) -> Result<Claims, JwtError> {
+        let validation = Validation::default();
+        let token_data = decode::<Claims>(token, &self.decoding_key, &validation)?;
+        let email = &token_data.claims.sub;
+        info!("validate_token email: {}", email);
+        match user_exists(&email).map_err(|_| JwtError::from(jsonwebtoken::errors::ErrorKind::InvalidToken))? {
+            true => Ok(token_data.claims),
+            false => Err(JwtError::from(jsonwebtoken::errors::ErrorKind::InvalidToken)),
+        }
+    }
+}
+
+pub async fn validator(
+     req: ServiceRequest,
+    credentials: Option<BearerAuth>,
+) -> Result<ServiceRequest, (Error, ServiceRequest)> {
+    let Some(credentials) = credentials else {
+        return Err((error::ErrorUnauthorized("No bearer token provided"), req));
+    };
+    let jwt_auth = JwtAuth::new();
+    let token = credentials.token();
+
+    info!("{credentials:?}");
+
+    if jwt_auth.is_blacklisted(token) {
+        return Err((error::ErrorUnauthorized("Token is blacklisted"), req));
+    }
+    match jwt_auth.validate_token(token) {
+        Ok(claims) => {
+            info!("JWT Validation successful!");
+            req.extensions_mut().insert(claims);
+            Ok(req)
+        }
+        Err(_) => Err((error::ErrorUnauthorized("Invalid token"), req)),
+    }
+
 }
