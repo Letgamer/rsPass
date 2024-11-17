@@ -133,4 +133,16 @@ pub fn data_get(email: &str) -> Result<String> {
     Ok(data)
 }
 
+pub fn data_update(email: &str, encrypted_data: &str) -> Result<(), rusqlite::Error> {
+    let mut conn = Connection::open(get_db_path())?;
+    let txn = conn.transaction()?;
+    debug!("Updating data of user with email: {} in database", email);
 
+    txn.execute(
+        "UPDATE users SET encrypted_data = ?1 WHERE email = ?2",
+        params![encrypted_data, email],
+    )?;
+
+    txn.commit()?;
+    Ok(())
+}

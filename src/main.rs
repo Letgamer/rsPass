@@ -76,7 +76,7 @@ async fn main() -> std::io::Result<()> {
                 scope("/api/sync")
                     .wrap(auth)
                     .route("/fetch", web::get().to(route_fetch))
-                    //.route("/update", web::post().to(route_update))
+                    .route("/update", web::post().to(route_update))
             )
             .split_for_parts();
 

@@ -8,6 +8,7 @@ use crate::db::user_register;
 use crate::db::user_changepwd;
 use crate::db::user_delete;
 use crate::db::data_get;
+use crate::db::data_update;
 use crate::models::*;
 use crate::auth::{JwtAuth};
 use actix_web_httpauth::{extractors::bearer::BearerAuth};
@@ -25,7 +26,7 @@ use actix_web::HttpMessage;
         (name = "accounts", description = "Account management endpoints"),
         (name = "sync", description = "Vault synchronization endpoints")
     ),
-    components(schemas(PreLoginRequest, LoginRequest, LoginResponse, ChangeRequest)),
+    components(schemas(PreLoginRequest, LoginRequest, LoginResponse, ChangeRequest, UpdateRequest)),
     modifiers(&SecurityAddon)
 )]
 pub struct ApiDoc;
@@ -221,7 +222,6 @@ pub async fn route_logout(
     let token = auth.token().to_owned();
     info!("authenticated for token: {}", token);
 
-    // Check if the token is blacklisted
     if jwt_auth.is_blacklisted(&token) {
         return HttpResponse::Unauthorized().finish();
     }
@@ -236,7 +236,7 @@ pub async fn route_logout(
         (status = 200, description = "Account deleted successfully!"),
         (status = 400, description = "Invalid payload"),
         (status = 401, description = "JWT Token is invalid"),
-        (status = 500, description = "Database Error or JWT Generation Error")
+        (status = 500, description = "Database Error or JWT Extraction Error")
     ),
     tag = "accounts",
     security(
@@ -254,7 +254,6 @@ pub async fn route_delete(
     jwt_auth.blacklist_token(&token);
     
     if let Some(claims) = req.extensions_mut().get::<Claims>() {
-        // Now you can use the claims data
         let user_email = &claims.sub;
         info!("JWT email provided: {}", user_email);
         match user_delete(user_email){
@@ -273,7 +272,7 @@ pub async fn route_delete(
     responses(
         (status = 200, description = "Fetched User Vault"),
         (status = 401, description = "JWT Token is invalid"),
-        (status = 500, description = "Database Error or JWT Generation Error")
+        (status = 500, description = "Database Error or JWT Extraction Error")
     ),
     tag = "sync",
     security(
@@ -287,7 +286,6 @@ pub async fn route_fetch(
     let token = auth.token().to_owned();
     info!("authenticated for token: {}", token);
     if let Some(claims) = req.extensions_mut().get::<Claims>() {
-        // Now you can use the claims data
         let user_email = &claims.sub;
         info!("JWT email provided: {}", user_email);
         match data_get(user_email){
@@ -306,7 +304,7 @@ pub async fn route_fetch(
     responses(
         (status = 200, description = "Updated User Vault"),
         (status = 401, description = "JWT Token is invalid"),
-        (status = 500, description = "Database Error or JWT Generation Error")
+        (status = 500, description = "Database Error or JWT Extraction Error")
     ),
     tag = "sync",
     security(
@@ -315,17 +313,17 @@ pub async fn route_fetch(
 )]
 pub async fn route_update(
     req: HttpRequest,
-    req_body: web::Json<ChangeRequest>,
+    req_body: web::Json<UpdateRequest>,
     auth: BearerAuth
 ) -> impl Responder {
     let token = auth.token().to_owned();
     info!("authenticated for token: {}", token);
     if let Some(claims) = req.extensions_mut().get::<Claims>() {
-        // Now you can use the claims data
         let user_email = &claims.sub;
+        let encrypted_data = &req_body.encrypted_data;
         info!("JWT email provided: {}", user_email);
-        match data_get(user_email){
-            Ok(data) => HttpResponse::Ok().json(DataResponse { data }),
+        match data_update(user_email, encrypted_data){
+            Ok(()) => HttpResponse::Ok().finish(),
             Err(e) => handle_db_error(&e),
         }
     }

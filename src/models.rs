@@ -61,5 +61,5 @@ pub struct DataResponse {
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct UpdateRequest {
-    pub data: String,
+    pub encrypted_data: String,
 }
