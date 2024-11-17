@@ -54,3 +54,12 @@ pub struct ChangeRequest {
     pub password_hash: String,
 }
 
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct DataResponse {
+    pub data: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct UpdateRequest {
+    pub data: String,
+}

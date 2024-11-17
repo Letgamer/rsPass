@@ -47,6 +47,7 @@ async fn main() -> std::io::Result<()> {
 
     spawn(async move {
         let mut interval = time::interval(Duration::from_secs(600)); // 10 minutes
+        interval.tick().await; // Don't run after starting
         loop {
             interval.tick().await;
             info!("Running blacklist cleanup...");
@@ -66,9 +67,16 @@ async fn main() -> std::io::Result<()> {
             .service(route_register)
             .service(
                 scope("/api/accounts")
-                    .wrap(auth)
+                    .wrap(auth.clone())
                     .route("/changepwd", web::post().to(route_changepwd))
                     .route("/logout", web::get().to(route_logout))
+                    .route("/delete", web::get().to(route_delete))
+            )
+            .service(
+                scope("/api/sync")
+                    .wrap(auth)
+                    .route("/fetch", web::get().to(route_fetch))
+                    //.route("/update", web::post().to(route_update))
             )
             .split_for_parts();
 

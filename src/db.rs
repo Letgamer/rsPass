@@ -102,3 +102,35 @@ pub fn user_changepwd(email: &str, password_hash: &str) -> Result<(), rusqlite::
     txn.commit()?;
     Ok(())
 }
+
+pub fn user_delete(email: &str) -> Result<(), rusqlite::Error> {
+    let mut conn = Connection::open(get_db_path())?;
+    let txn = conn.transaction()?;
+    info!("Deleting user with email: {} from database", email);
+    
+    txn.execute(
+        "DELETE FROM users WHERE email = ?1",
+        params![email],
+    )?;
+    
+    txn.commit()?;
+    Ok(())
+}
+
+pub fn data_get(email: &str) -> Result<String> {
+    let mut conn = Connection::open(get_db_path())?;
+    let txn = conn.transaction()?;
+    debug!("Fetching data for user with email: {}", email);
+
+    let data = txn.query_row(
+        "SELECT encrypted_data FROM users WHERE email = ?1",
+        params![email],
+        |row| row.get(0),
+    )?;
+
+    txn.commit()?;
+
+    Ok(data)
+}
+
+

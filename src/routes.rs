@@ -6,6 +6,8 @@ use crate::db::user_exists;
 use crate::db::user_login;
 use crate::db::user_register;
 use crate::db::user_changepwd;
+use crate::db::user_delete;
+use crate::db::data_get;
 use crate::models::*;
 use crate::auth::{JwtAuth};
 use actix_web_httpauth::{extractors::bearer::BearerAuth};
@@ -16,11 +18,12 @@ use actix_web::HttpMessage;
 // API Documentation struct
 #[derive(OpenApi)]
 #[openapi(
-    paths(route_health, route_email, route_login, route_register, route_changepwd, route_logout),
+    paths(route_health, route_email, route_login, route_register, route_changepwd, route_logout, route_delete, route_fetch, route_update),
     tags(
         (name = "health", description = "Health check endpoints"),
         (name = "auth", description = "Authentication Endpoints"),
-        (name = "accounts", description = "Account management endpoints")
+        (name = "accounts", description = "Account management endpoints"),
+        (name = "sync", description = "Vault synchronization endpoints")
     ),
     components(schemas(PreLoginRequest, LoginRequest, LoginResponse, ChangeRequest)),
     modifiers(&SecurityAddon)
@@ -204,8 +207,7 @@ pub async fn route_changepwd(
     path = "/api/accounts/logout",
     responses(
         (status = 200, description = "Logged out successfully!"),
-        (status = 401, description = "JWT Token is invalid or already blacklisted"),
-        (status = 500, description = "JWT Blacklist Error or JWT Validation Error")
+        (status = 401, description = "JWT Token is invalid or already blacklisted")
     ),
     tag = "accounts",
     security(
@@ -223,17 +225,111 @@ pub async fn route_logout(
     if jwt_auth.is_blacklisted(&token) {
         return HttpResponse::Unauthorized().finish();
     }
+    jwt_auth.blacklist_token(&token);
+    HttpResponse::Ok().finish()
+}
 
-    match jwt_auth.validate_token(&token) {
-        Ok(claims) => {
-            info!("JWT token valid, logging out user: {}", claims.sub);
-            // Add token to blacklist to invalidate it
-            jwt_auth.blacklist_token(&token);
-            HttpResponse::Ok().finish()
+#[utoipa::path(
+    get,
+    path = "/api/accounts/delete",
+    responses(
+        (status = 200, description = "Account deleted successfully!"),
+        (status = 400, description = "Invalid payload"),
+        (status = 401, description = "JWT Token is invalid"),
+        (status = 500, description = "Database Error or JWT Generation Error")
+    ),
+    tag = "accounts",
+    security(
+        ("jwt_auth" = [])
+    )
+)]
+pub async fn route_delete(
+    req: HttpRequest,
+    jwt_auth: web::Data<JwtAuth>,
+    auth: BearerAuth
+) -> impl Responder {
+    let token = auth.token().to_owned();
+    info!("authenticated for token: {}", token);
+
+    jwt_auth.blacklist_token(&token);
+    
+    if let Some(claims) = req.extensions_mut().get::<Claims>() {
+        // Now you can use the claims data
+        let user_email = &claims.sub;
+        info!("JWT email provided: {}", user_email);
+        match user_delete(user_email){
+            Ok(()) => HttpResponse::Ok().finish(),
+            Err(e) => handle_db_error(&e),
         }
-        Err(_) => {
-            // If validation fails, return unauthorized response
-            HttpResponse::Unauthorized().finish()
+    }
+    else {
+        HttpResponse::InternalServerError().finish()
+    }
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/sync/fetch",
+    responses(
+        (status = 200, description = "Fetched User Vault"),
+        (status = 401, description = "JWT Token is invalid"),
+        (status = 500, description = "Database Error or JWT Generation Error")
+    ),
+    tag = "sync",
+    security(
+        ("jwt_auth" = [])
+    )
+)]
+pub async fn route_fetch(
+    req: HttpRequest,
+    auth: BearerAuth
+) -> impl Responder {
+    let token = auth.token().to_owned();
+    info!("authenticated for token: {}", token);
+    if let Some(claims) = req.extensions_mut().get::<Claims>() {
+        // Now you can use the claims data
+        let user_email = &claims.sub;
+        info!("JWT email provided: {}", user_email);
+        match data_get(user_email){
+            Ok(data) => HttpResponse::Ok().json(DataResponse { data }),
+            Err(e) => handle_db_error(&e),
         }
+    }
+    else {
+        HttpResponse::InternalServerError().finish()
+    }
+}
+
+#[utoipa::path(
+    post,
+    path = "/api/sync/update",
+    responses(
+        (status = 200, description = "Updated User Vault"),
+        (status = 401, description = "JWT Token is invalid"),
+        (status = 500, description = "Database Error or JWT Generation Error")
+    ),
+    tag = "sync",
+    security(
+        ("jwt_auth" = [])
+    )
+)]
+pub async fn route_update(
+    req: HttpRequest,
+    req_body: web::Json<ChangeRequest>,
+    auth: BearerAuth
+) -> impl Responder {
+    let token = auth.token().to_owned();
+    info!("authenticated for token: {}", token);
+    if let Some(claims) = req.extensions_mut().get::<Claims>() {
+        // Now you can use the claims data
+        let user_email = &claims.sub;
+        info!("JWT email provided: {}", user_email);
+        match data_get(user_email){
+            Ok(data) => HttpResponse::Ok().json(DataResponse { data }),
+            Err(e) => handle_db_error(&e),
+        }
+    }
+    else {
+        HttpResponse::InternalServerError().finish()
     }
 }
