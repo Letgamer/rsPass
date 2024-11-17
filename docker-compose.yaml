@@ -1,0 +1,29 @@
+services:
+  rspass-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rspass-backend
+    restart: always
+    environment:
+      JWT_SECRET: '${JWT_SECRET}'
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.rspass-backend.rule=Host(`backend-rspass.${DOMAIN}`)
+      - traefik.http.routers.rspass-backend.entrypoints=websecure
+      - traefik.http.routers.rspass-backend.tls=true
+      - traefik.http.routers.rspass-backend.service=rspass-backend
+      - traefik.http.services.rspass-backend.loadbalancer.server.port=8080
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+    volumes:
+      - ./database.db:/usr/local/bin/database.db
+    networks:
+      - cloudflaretunnel
+
+networks:
+  cloudflaretunnel:
+    external: true
