@@ -16,7 +16,7 @@ use actix_web::HttpMessage;
 // API Documentation struct
 #[derive(OpenApi)]
 #[openapi(
-    paths(route_health, route_email, route_login, route_register, route_changepwd),
+    paths(route_health, route_email, route_login, route_register, route_changepwd, route_logout),
     tags(
         (name = "health", description = "Health check endpoints"),
         (name = "auth", description = "Authentication Endpoints"),
@@ -196,5 +196,44 @@ pub async fn route_changepwd(
     }
     else {
         HttpResponse::InternalServerError().finish()
+    }
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/accounts/logout",
+    responses(
+        (status = 200, description = "Logged out successfully!"),
+        (status = 401, description = "JWT Token is invalid or already blacklisted"),
+        (status = 500, description = "JWT Blacklist Error or JWT Validation Error")
+    ),
+    tag = "accounts",
+    security(
+        ("jwt_auth" = [])
+    )
+)]
+pub async fn route_logout(
+    auth: BearerAuth,
+    jwt_auth: web::Data<JwtAuth>
+) -> impl Responder {
+    let token = auth.token().to_owned();
+    info!("authenticated for token: {}", token);
+
+    // Check if the token is blacklisted
+    if jwt_auth.is_blacklisted(&token) {
+        return HttpResponse::Unauthorized().finish();
+    }
+
+    match jwt_auth.validate_token(&token) {
+        Ok(claims) => {
+            info!("JWT token valid, logging out user: {}", claims.sub);
+            // Add token to blacklist to invalidate it
+            jwt_auth.blacklist_token(&token);
+            HttpResponse::Ok().finish()
+        }
+        Err(_) => {
+            // If validation fails, return unauthorized response
+            HttpResponse::Unauthorized().finish()
+        }
     }
 }

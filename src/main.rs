@@ -46,7 +46,7 @@ async fn main() -> std::io::Result<()> {
     let jwt_auth_clone = jwt_auth.clone();
 
     spawn(async move {
-        let mut interval = time::interval(Duration::from_secs(600)); // 30 minutes
+        let mut interval = time::interval(Duration::from_secs(600)); // 10 minutes
         loop {
             interval.tick().await;
             info!("Running blacklist cleanup...");
@@ -67,7 +67,8 @@ async fn main() -> std::io::Result<()> {
             .service(
                 scope("/api/accounts")
                     .wrap(auth)
-                    .route("/changepwd", web::post().to(route_changepwd)),
+                    .route("/changepwd", web::post().to(route_changepwd))
+                    .route("/logout", web::get().to(route_logout))
             )
             .split_for_parts();
 
