@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
-use utoipa::ToSchema;
+use utoipa::{ToSchema, openapi::security::{HttpAuthScheme, HttpBuilder, SecurityScheme}};
 use validator::Validate;
-use utoipa::openapi::security::{SecurityScheme, HttpAuthScheme, HttpBuilder};
 
 pub struct SecurityAddon;
 

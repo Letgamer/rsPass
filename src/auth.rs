@@ -1,14 +1,10 @@
-use actix_web::{dev::ServiceRequest, Error, error};
-use actix_web::HttpMessage;
+use actix_web::{dev::ServiceRequest, error, Error, HttpMessage};
 use actix_web_httpauth::{extractors::bearer::BearerAuth};
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation, errors::Error as JwtError};
-use serde::{Deserialize, Serialize};
-use std::time::{SystemTime, UNIX_EPOCH};
-use std::collections::HashSet;
-use std::sync::Mutex;
+use log::{debug, info, warn};
 use once_cell::sync::Lazy;
-use std::env;
-use log::info;
+use serde::{Deserialize, Serialize};
+use std::{collections::HashSet, env, sync::Mutex, time::{SystemTime, UNIX_EPOCH}};
 
 use crate::db::user_exists;
 
@@ -55,6 +51,7 @@ impl JwtAuth {
     }
 
     pub fn blacklist_token(&self, token: &str) {
+        debug!("The following token is being blacklisted: {}", token);
         let mut blacklist = BLACKLIST.lock().unwrap();
         blacklist.insert(token.to_string());
     }
@@ -73,6 +70,7 @@ impl JwtAuth {
                 false
             }
         });
+        debug!("Blacklist cleanup completed. Current size: {}", blacklist.len());
     }
 
     pub fn validate_token(&self, token: &str) -> Result<Claims, JwtError> {
@@ -97,9 +95,8 @@ pub async fn validator(
     let jwt_auth = JwtAuth::new();
     let token = credentials.token();
 
-    info!("{credentials:?}");
-
     if jwt_auth.is_blacklisted(token) {
+        debug!("Token is blacklisted: {}", token);
         return Err((error::ErrorUnauthorized("Token is blacklisted"), req));
     }
     match jwt_auth.validate_token(token) {
@@ -108,7 +105,10 @@ pub async fn validator(
             req.extensions_mut().insert(claims);
             Ok(req)
         }
-        Err(_) => Err((error::ErrorUnauthorized("Invalid token"), req)),
+        Err(_) => {
+            warn!("Invalid JWT token");
+            Err((error::ErrorUnauthorized("Invalid token"), req))
+        },
     }
 
 }

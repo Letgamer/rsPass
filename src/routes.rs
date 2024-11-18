@@ -1,20 +1,12 @@
-use actix_web::{get, post, HttpResponse, Responder, web};
-use utoipa::{OpenApi};
-use log::{error, debug, info};
-use validator::Validate;
-use crate::db::user_exists;
-use crate::db::user_login;
-use crate::db::user_register;
-use crate::db::user_changepwd;
-use crate::db::user_delete;
-use crate::db::data_get;
-use crate::db::data_update;
-use crate::models::*;
-use crate::auth::{JwtAuth};
+use actix_web::{get, post, HttpMessage, HttpRequest, HttpResponse, Responder, web};
 use actix_web_httpauth::{extractors::bearer::BearerAuth};
-use crate::auth::Claims;
-use actix_web::HttpRequest;
-use actix_web::HttpMessage;
+use log::{debug, error, info};
+use utoipa::{OpenApi};
+use validator::Validate;
+
+use crate::db::*;
+use crate::models::*;
+use crate::auth::{JwtAuth, Claims};
 
 // API Documentation struct
 #[derive(OpenApi)]
@@ -52,7 +44,7 @@ fn validate_format<T: Validate>(req_body: &web::Json<T>) -> Result<(), HttpRespo
     responses((status = 200, description = "API is healthy")),
     tag = "health"
 )]
-#[get("/api/health")]
+#[get("/api/v1/health")]
 pub async fn route_health() -> impl Responder {
     HttpResponse::Ok().finish()
 }
@@ -68,16 +60,14 @@ pub async fn route_health() -> impl Responder {
     ),
     tag = "accounts"
 )]
-#[post("/api/accounts/checkmail")]
+#[post("/api/v1/accounts/checkmail")]
 pub async fn route_email(req_body: web::Json<PreLoginRequest>) -> impl Responder {
     if let Err(response) = validate_format(&req_body) {
         return response;
     }
     
-    let email = &req_body.email;
-    debug!("Email extracted: {}", email);
-    
-    match user_exists(email) {
+    debug!("Email check for: {}", req_body.email);
+    match user_exists(&req_body.email) {
         Ok(true) => HttpResponse::Ok().finish(), // User exists
         Ok(false) => HttpResponse::NotFound().finish(), // User does not exist
         Err(e) => handle_db_error(&e),
@@ -96,19 +86,17 @@ pub async fn route_email(req_body: web::Json<PreLoginRequest>) -> impl Responder
     ),
     tag = "auth"
 )]
-#[post("/api/auth/login")]
+#[post("/api/v1/auth/login")]
 pub async fn route_login(req_body: web::Json<LoginRequest>, jwt_auth: web::Data<JwtAuth>) -> impl Responder {
     if let Err(response) = validate_format(&req_body) {
         return response;
     }
 
-    let email = &req_body.email;
-    let password_hash = &req_body.password_hash;
-    debug!("Login attempt for email: {}", email);
+    debug!("Login attempt for email: {}", &req_body.email);
 
-    match user_login(email, password_hash) {
+    match user_login(&req_body.email, &req_body.password_hash) {
         Ok(true) => {
-            match jwt_auth.generate_token(email) {
+            match jwt_auth.generate_token(&req_body.email) {
                 Ok(token) => HttpResponse::Ok().json(LoginResponse { token }),
                 Err(e) => {
                     error!("Failed to generate token: {}", e);
@@ -117,7 +105,7 @@ pub async fn route_login(req_body: web::Json<LoginRequest>, jwt_auth: web::Data<
             }
         }
         Ok(false) => {
-            match user_exists(email) {
+            match user_exists(&req_body.email) {
                 Ok(true) => HttpResponse::Unauthorized().finish(), // User exists but incorrect password
                 Ok(false) => HttpResponse::NotFound().finish(), // User does not exist
                 Err(e) => handle_db_error(&e),
@@ -137,21 +125,19 @@ pub async fn route_login(req_body: web::Json<LoginRequest>, jwt_auth: web::Data<
     ),
     tag = "auth"
 )]
-#[post("/api/auth/register")]
+#[post("/api/v1/auth/register")]
 pub async fn route_register(req_body: web::Json<LoginRequest>, jwt_auth: web::Data<JwtAuth>) -> impl Responder {
     if let Err(response) = validate_format(&req_body) {
         return response;
     }
 
-    let email = &req_body.email;
-    let password_hash = &req_body.password_hash;
-    debug!("Register attempt for email: {}", email);
-    match user_exists(email) {
+    debug!("Register attempt for email: {}", &req_body.email);
+    match user_exists(&req_body.email) {
         Ok(true) => HttpResponse::Unauthorized().finish(),
         Ok(false) => {
-            match user_register(email, password_hash) {
+            match user_register(&req_body.email, &req_body.password_hash) {
                 Ok(()) => {
-                    match jwt_auth.generate_token(email) {
+                    match jwt_auth.generate_token(&req_body.email) {
                         Ok(token) => HttpResponse::Ok().json(LoginResponse { token }),
                         Err(e) => {
                             error!("Failed to generate token: {}", e);
@@ -169,7 +155,7 @@ pub async fn route_register(req_body: web::Json<LoginRequest>, jwt_auth: web::Da
 
 #[utoipa::path(
     post,
-    path = "/api/accounts/changepwd",
+    path = "/api/v1/accounts/changepwd",
     request_body = ChangeRequest,
     responses(
         (status = 200, description = "Password changed successfully!"),
@@ -182,30 +168,23 @@ pub async fn route_register(req_body: web::Json<LoginRequest>, jwt_auth: web::Da
         ("jwt_auth" = [])
     )
 )]
-pub async fn route_changepwd(
-    req: HttpRequest,
-    req_body: web::Json<ChangeRequest>,
-    auth: BearerAuth
-) -> impl Responder {
-    info!("authenticated for token: {}", auth.token().to_owned());
+pub async fn route_changepwd(req: HttpRequest, req_body: web::Json<ChangeRequest>, auth: BearerAuth) -> impl Responder {
+    debug!("authenticated for token: {}", auth.token());
     if let Some(claims) = req.extensions_mut().get::<Claims>() {
-        // Now you can use the claims data
-        let user_email = &claims.sub;
-        let password_hash = &req_body.password_hash;
-        info!("JWT email provided: {}", user_email);
-        match user_changepwd(user_email, password_hash){
+        info!("Change Password of: {}", &claims.sub);
+        match user_changepwd(&claims.sub, &req_body.password_hash){
             Ok(()) => HttpResponse::Ok().finish(),
             Err(e) => handle_db_error(&e),
         }
     }
     else {
-        HttpResponse::InternalServerError().finish()
+        HttpResponse::Unauthorized().finish()
     }
 }
 
 #[utoipa::path(
     get,
-    path = "/api/accounts/logout",
+    path = "/api/v1/accounts/logout",
     responses(
         (status = 200, description = "Logged out successfully!"),
         (status = 401, description = "JWT Token is invalid or already blacklisted")
@@ -215,12 +194,9 @@ pub async fn route_changepwd(
         ("jwt_auth" = [])
     )
 )]
-pub async fn route_logout(
-    auth: BearerAuth,
-    jwt_auth: web::Data<JwtAuth>
-) -> impl Responder {
-    let token = auth.token().to_owned();
-    info!("authenticated for token: {}", token);
+pub async fn route_logout(auth: BearerAuth, jwt_auth: web::Data<JwtAuth>) -> impl Responder {
+    let token = auth.token();
+    debug!("Logging with token: {}", token);
 
     if jwt_auth.is_blacklisted(&token) {
         return HttpResponse::Unauthorized().finish();
@@ -231,7 +207,7 @@ pub async fn route_logout(
 
 #[utoipa::path(
     get,
-    path = "/api/accounts/delete",
+    path = "/api/v1/delete",
     responses(
         (status = 200, description = "Account deleted successfully!"),
         (status = 400, description = "Invalid payload"),
@@ -243,32 +219,27 @@ pub async fn route_logout(
         ("jwt_auth" = [])
     )
 )]
-pub async fn route_delete(
-    req: HttpRequest,
-    jwt_auth: web::Data<JwtAuth>,
-    auth: BearerAuth
-) -> impl Responder {
-    let token = auth.token().to_owned();
-    info!("authenticated for token: {}", token);
+pub async fn route_delete(req: HttpRequest, jwt_auth: web::Data<JwtAuth>, auth: BearerAuth) -> impl Responder {
+    let token = auth.token();
+    debug!("Deleting account with token: {}", token);
 
     jwt_auth.blacklist_token(&token);
     
     if let Some(claims) = req.extensions_mut().get::<Claims>() {
-        let user_email = &claims.sub;
-        info!("JWT email provided: {}", user_email);
-        match user_delete(user_email){
+        info!("Deleting account of: {}", &claims.sub);
+        match user_delete(&claims.sub){
             Ok(()) => HttpResponse::Ok().finish(),
             Err(e) => handle_db_error(&e),
         }
     }
     else {
-        HttpResponse::InternalServerError().finish()
+        HttpResponse::Unauthorized().finish()
     }
 }
 
 #[utoipa::path(
     get,
-    path = "/api/sync/fetch",
+    path = "/api/v1/sync/fetch",
     responses(
         (status = 200, description = "Fetched User Vault"),
         (status = 401, description = "JWT Token is invalid"),
@@ -279,16 +250,12 @@ pub async fn route_delete(
         ("jwt_auth" = [])
     )
 )]
-pub async fn route_fetch(
-    req: HttpRequest,
-    auth: BearerAuth
-) -> impl Responder {
-    let token = auth.token().to_owned();
-    info!("authenticated for token: {}", token);
+pub async fn route_fetch(req: HttpRequest, auth: BearerAuth) -> impl Responder {
+    let token = auth.token();
+    debug!("Fetching vault with token: {}", token);
     if let Some(claims) = req.extensions_mut().get::<Claims>() {
-        let user_email = &claims.sub;
-        info!("JWT email provided: {}", user_email);
-        match data_get(user_email){
+        info!("Fetching vault of user: {}", &claims.sub);
+        match data_get(&claims.sub){
             Ok(data) => HttpResponse::Ok().json(DataResponse { data }),
             Err(e) => handle_db_error(&e),
         }
@@ -300,7 +267,7 @@ pub async fn route_fetch(
 
 #[utoipa::path(
     post,
-    path = "/api/sync/update",
+    path = "/api/v1/sync/update",
     responses(
         (status = 200, description = "Updated User Vault"),
         (status = 401, description = "JWT Token is invalid"),
@@ -311,18 +278,12 @@ pub async fn route_fetch(
         ("jwt_auth" = [])
     )
 )]
-pub async fn route_update(
-    req: HttpRequest,
-    req_body: web::Json<UpdateRequest>,
-    auth: BearerAuth
-) -> impl Responder {
-    let token = auth.token().to_owned();
-    info!("authenticated for token: {}", token);
+pub async fn route_update(req: HttpRequest, req_body: web::Json<UpdateRequest>, auth: BearerAuth) -> impl Responder {
+    let token = auth.token();
+    debug!("Updating vault with token: {}", token);
     if let Some(claims) = req.extensions_mut().get::<Claims>() {
-        let user_email = &claims.sub;
-        let encrypted_data = &req_body.encrypted_data;
-        info!("JWT email provided: {}", user_email);
-        match data_update(user_email, encrypted_data){
+        info!("Updating vault of user: {}", &claims.sub);
+        match data_update(&claims.sub, &req_body.encrypted_data){
             Ok(()) => HttpResponse::Ok().finish(),
             Err(e) => handle_db_error(&e),
         }

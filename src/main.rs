@@ -1,79 +1,79 @@
-use actix_web::{middleware::Logger, App, HttpServer, web};
-use env_logger::Env;
+use actix_web::{App, HttpServer, middleware::Logger, web};
+use actix_web_httpauth::middleware::HttpAuthentication;
 use dotenv::dotenv;
+use env_logger::Env;
 use log::info;
-use std::env;
+use std::{env, sync::Arc};
+use tokio::{spawn, time::{self, Duration}};
+use utoipa::{OpenApi};
+use utoipa_actix_web::{AppExt, scope};
 use utoipa_swagger_ui::SwaggerUi;
-use utoipa_actix_web::AppExt;
-use utoipa::OpenApi;
-use actix_web_httpauth::{middleware::HttpAuthentication};
-use utoipa_actix_web::scope;
-use tokio::spawn;
-use tokio::time;
-use tokio::time::Duration;
 
-mod auth;
-mod db;
-mod models;
-mod routes;
-use crate::routes::*;
-use crate::db::initialize_database;
-use crate::auth::{JwtAuth, validator};
+use backend_rspass::{
+    auth::{JwtAuth, validator}, 
+    db::initialize_database, 
+    routes::*};
 
 fn get_server_config() -> (String, String) {
     let host = env::var("HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
     let port = env::var("PORT").unwrap_or_else(|_| "8080".to_string());
     (host, port)
 }
-pub fn get_db_path() -> String {
-    env::var("DB_FILE").unwrap_or_else(|_| "./database.db".to_string())
+
+async fn run_blacklist_cleanup(jwt_auth: Arc<JwtAuth>) {
+    let interval_seconds = env::var("CLEANUP_INTERVAL")
+        .ok()
+        .and_then(|val| val.parse().ok())
+        .unwrap_or(600);
+
+    info!("Cleanup Interval is set to: {} seconds", interval_seconds);
+
+    let mut interval = time::interval(Duration::from_secs(interval_seconds));
+    interval.tick().await;
+    loop {
+        interval.tick().await;
+        info!("Running blacklist cleanup...");
+        jwt_auth.cleanup_blacklist();
+    }
 }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv().ok();
-    env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
-    let db_path = get_db_path();
-    
-    info!("Initiating the database located at:{} ",db_path);
-    initialize_database(&db_path);
+    let log_level = env::var("LOG_LEVEL").unwrap_or_else(|_| "info".to_string());
+    env_logger::Builder::from_env(Env::default().default_filter_or(log_level)).init();
+
+    initialize_database();
 
     let (host, port) = get_server_config();
     info!("Starting server at {}:{}", host, port);
 
     // Create JWT auth instance to share across workers
-    let jwt_auth = web::Data::new(JwtAuth::new());
-    let jwt_auth_clone = jwt_auth.clone();
+    let jwt_auth = Arc::new(JwtAuth::new());
 
-    spawn(async move {
-        let mut interval = time::interval(Duration::from_secs(600)); // 10 minutes
-        interval.tick().await; // Don't run after starting
-        loop {
-            interval.tick().await;
-            info!("Running blacklist cleanup...");
-            JwtAuth::cleanup_blacklist(&jwt_auth_clone);
-        }
-    });
+    // Spawn cleanup task
+    let cleanup_auth = jwt_auth.clone();
+    spawn(async move { run_blacklist_cleanup(cleanup_auth).await });
 
     HttpServer::new(move|| {
         let auth = HttpAuthentication::with_fn(validator);
         let (app, _api_doc) = App::new()
             .wrap(Logger::default())
-            .app_data(jwt_auth.clone())
+            .app_data(web::Data::from(jwt_auth.clone()))
             .into_utoipa_app()
             .service(route_health)
             .service(route_email)
             .service(route_login)
             .service(route_register)
             .service(
-                scope("/api/accounts")
+                scope("/api/v1/accounts")
                     .wrap(auth.clone())
                     .route("/changepwd", web::post().to(route_changepwd))
                     .route("/logout", web::get().to(route_logout))
                     .route("/delete", web::get().to(route_delete))
             )
             .service(
-                scope("/api/sync")
+                scope("/api/v1/sync")
                     .wrap(auth)
                     .route("/fetch", web::get().to(route_fetch))
                     .route("/update", web::post().to(route_update))

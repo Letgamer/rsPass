@@ -1,16 +1,21 @@
-use log::{error, info, debug};
-use rusqlite::{Connection, params, Result};
-use std::path::Path;
-use std::process;
-use std::fs::OpenOptions;
-use std::io::ErrorKind;
-use crate::get_db_path;
+use log::{error, info};
+use rusqlite::{params, Connection, Result};
+use std::{env, fs::OpenOptions, io::ErrorKind, path::Path, process};
 
-pub fn initialize_database(db_path: &str) {
-    if !Path::new(db_path).exists() {
+pub fn get_db_path() -> String {
+    env::var("DB_FILE").unwrap_or_else(|_| "./database.db".to_string())
+}
+
+fn get_connection() -> Result<Connection> {
+    let db_path = get_db_path();
+    Connection::open(db_path)
+}
+
+pub fn initialize_database() {
+    let db_path = get_db_path();
+    if !Path::new(&db_path).exists() {
         info!("Creating new database at: {}", db_path);
-        // Handle errors when creating the database
-        if let Err(e) = Connection::open(db_path).and_then(|conn| {
+        if let Err(e) = get_connection().and_then(|conn| {
             conn.execute(
                 "CREATE TABLE IF NOT EXISTS users (
                     email TEXT PRIMARY KEY,
@@ -21,128 +26,84 @@ pub fn initialize_database(db_path: &str) {
             )
         }) {
             error!("Failed to initialize database: {}", e);
-            process::exit(1); // Exit the program with an error code
+            process::exit(1);
         }
         info!("Database created successfully.");
     } else {
-        info!("Database already exists at: {}", db_path);
-
-        // Check if the database is readable and writable
-        match OpenOptions::new().read(true).write(true).open(db_path) {
-            Ok(_) => {
-                info!("Database is readable and writable.");
+        if let Err(e) = OpenOptions::new().read(true).write(true).open(&db_path) {
+            match e.kind() {
+                ErrorKind::NotFound => error!("Database file not found."),
+                ErrorKind::PermissionDenied => error!("No permission to read/write the database."),
+                _ => error!("Failed to access database: {}", e),
             }
-            Err(e) => {
-                match e.kind() {
-                    ErrorKind::NotFound => {
-                        error!("Database file not found.");
-                    }
-                    ErrorKind::PermissionDenied => {
-                        error!("No permission to read/write the database.");
-                    }
-                    _ => {
-                        error!("Failed to access database: {}", e);
-                    }
-                }
-                process::exit(1); // Exit with error if not readable and writable
-            }
+            process::exit(1);
         }
+        info!("Database already existing at: {} is being used", db_path);
     }
 }
 
 pub fn user_exists(email: &str) -> Result<bool> {
-    let mut conn = Connection::open(get_db_path())?;
-    let txn = conn.transaction()?;
-    debug!("Fetching user with email: {}", email);
-    let exists: bool = txn.query_row(
+    let conn = get_connection()?;
+    let exists: bool = conn.query_row(
         "SELECT EXISTS(SELECT 1 FROM users WHERE email = ?1)",
         params![email],
         |row| row.get(0),
     )?;
-    txn.commit()?;
     Ok(exists)
 }
 
 pub fn user_login(email: &str, password_hash: &str) -> Result<bool> {
-    let mut conn = Connection::open(get_db_path())?;
-    let txn = conn.transaction()?;
-    debug!("Logging in user with email: {} in database", email);
-    let exists: bool = txn.query_row(
+    let conn = get_connection()?;
+    let exists: bool = conn.query_row(
         "SELECT EXISTS(SELECT 1 FROM users WHERE email = ?1 AND password_hash = ?2)",
         params![email, password_hash],
         |row| row.get(0),
     )?;
-    txn.commit()?;
     Ok(exists)
 }
 
-pub fn user_register(email: &str, password_hash: &str) -> Result<(), rusqlite::Error> {
-    let mut conn = Connection::open(get_db_path())?;
-    let txn = conn.transaction()?;
-    debug!("Registering user with email: {} in database", email);
-
-    txn.execute(
+pub fn user_register(email: &str, password_hash: &str) -> Result<()> {
+    let conn = get_connection()?;
+    conn.execute(
         "INSERT INTO users (email, password_hash) VALUES (?1, ?2)",
         params![email, password_hash],
     )?;
-
-    txn.commit()?;
     Ok(())
 }
 
-pub fn user_changepwd(email: &str, password_hash: &str) -> Result<(), rusqlite::Error> {
-    let mut conn = Connection::open(get_db_path())?;
-    let txn = conn.transaction()?;
-    info!("Changing Password of user with email: {} in database", email);
-    txn.execute(
+pub fn user_changepwd(email: &str, password_hash: &str) -> Result<()> {
+    let conn = get_connection()?;
+    conn.execute(
         "UPDATE users SET password_hash = ?1 WHERE email = ?2",
         params![password_hash, email],
     )?;
-
-    txn.commit()?;
     Ok(())
 }
 
-pub fn user_delete(email: &str) -> Result<(), rusqlite::Error> {
-    let mut conn = Connection::open(get_db_path())?;
-    let txn = conn.transaction()?;
-    info!("Deleting user with email: {} from database", email);
-    
-    txn.execute(
+pub fn user_delete(email: &str) -> Result<()> {
+    let conn = get_connection()?;
+    conn.execute(
         "DELETE FROM users WHERE email = ?1",
         params![email],
     )?;
-    
-    txn.commit()?;
     Ok(())
 }
 
 pub fn data_get(email: &str) -> Result<String> {
-    let mut conn = Connection::open(get_db_path())?;
-    let txn = conn.transaction()?;
-    debug!("Fetching data for user with email: {}", email);
-
-    let data = txn.query_row(
+    let conn = get_connection()?;
+    let data: String = conn.query_row(
         "SELECT encrypted_data FROM users WHERE email = ?1",
         params![email],
         |row| row.get(0),
     )?;
-
-    txn.commit()?;
-
     Ok(data)
 }
 
-pub fn data_update(email: &str, encrypted_data: &str) -> Result<(), rusqlite::Error> {
-    let mut conn = Connection::open(get_db_path())?;
-    let txn = conn.transaction()?;
-    debug!("Updating data of user with email: {} in database", email);
-
-    txn.execute(
+pub fn data_update(email: &str, encrypted_data: &str) -> Result<()> {
+    let conn = get_connection()?;
+    conn.execute(
         "UPDATE users SET encrypted_data = ?1 WHERE email = ?2",
         params![encrypted_data, email],
     )?;
-
-    txn.commit()?;
     Ok(())
 }

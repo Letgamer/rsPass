@@ -6,7 +6,14 @@ services:
     container_name: rspass-backend
     restart: always
     environment:
+      # Generate a secure Secret!
       JWT_SECRET: '${JWT_SECRET}'
+      # Default value
+      LOG_LEVEL: 'info'
+      # Default Value
+      CLEANUP_INTERVAL: 600
+      # Define Database Location
+      DB_FILE: './database.db'
     labels:
       - traefik.enable=true
       - traefik.http.routers.rspass-backend.rule=Host(`backend-rspass.${DOMAIN}`)
