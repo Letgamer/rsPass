@@ -21,16 +21,16 @@ impl utoipa::Modify for SecurityAddon {
 #[derive(Debug, Serialize, Deserialize, ToSchema, Validate)]
 pub struct PreLoginRequest {
     #[schema(format="email")]
-    #[validate(email)]
+    #[validate(email, length(max = 320))]
     pub email: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema, Validate)]
 pub struct LoginRequest {
     #[schema(format = "email")]
-    #[validate(email)]
+    #[validate(email, length(max = 320))]
     pub email: String,
-    // Set password_hash to a specific Length!
+    #[validate(length(max = 1024))]
     pub password_hash: String,
 }
 
@@ -42,23 +42,26 @@ pub struct LoginResponse {
 #[derive(Debug, Serialize, Deserialize, ToSchema, Validate)]
 pub struct RegisterRequest {
     #[schema(format = "email")]
-    #[validate(email)]
+    #[validate(email, length(max = 320))]
     pub email: String,
     // Set password_hash to a specific Length!
+    #[validate(length(max = 1024))]
     pub password_hash: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, ToSchema)]
+#[derive(Debug, Serialize, Deserialize, ToSchema, Validate)]
 pub struct ChangeRequest {
+    #[validate(length(max = 1024))]
     pub password_hash: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct DataResponse {
-    pub data: String,
+    pub encrypted_data: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, ToSchema)]
+#[derive(Debug, Serialize, Deserialize, ToSchema, Validate)]
 pub struct UpdateRequest {
+    #[validate(length(max = 1048576))]
     pub encrypted_data: String,
 }

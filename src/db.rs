@@ -91,12 +91,12 @@ pub fn user_delete(email: &str) -> Result<()> {
 
 pub fn data_get(email: &str) -> Result<String> {
     let conn = get_connection()?;
-    let data: String = conn.query_row(
+    let encrypted_data: String = conn.query_row(
         "SELECT encrypted_data FROM users WHERE email = ?1",
         params![email],
         |row| row.get(0),
     )?;
-    Ok(data)
+    Ok(encrypted_data)
 }
 
 pub fn data_update(email: &str, encrypted_data: &str) -> Result<()> {

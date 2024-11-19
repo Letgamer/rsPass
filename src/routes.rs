@@ -256,7 +256,7 @@ pub async fn route_fetch(req: HttpRequest, auth: BearerAuth) -> impl Responder {
     if let Some(claims) = req.extensions_mut().get::<Claims>() {
         info!("Fetching vault of user: {}", &claims.sub);
         match data_get(&claims.sub){
-            Ok(data) => HttpResponse::Ok().json(DataResponse { data }),
+            Ok(encrypted_data) => HttpResponse::Ok().json(DataResponse { encrypted_data }),
             Err(e) => handle_db_error(&e),
         }
     }
