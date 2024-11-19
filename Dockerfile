@@ -1,4 +1,4 @@
-FROM rust:alpine as builder
+FROM rust:alpine AS builder
 
 # Install required dependencies for building in Alpine
 # musl-dev because of: https://bxbrenden.github.io/
