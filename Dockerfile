@@ -11,7 +11,7 @@ COPY . .
 RUN cargo build --release
 
 FROM scratch
-COPY --from=builder /usr/src/app/target/release/backend /usr/local/bin/backend
+COPY --from=builder /usr/src/app/target/release/backend_rspass /usr/local/bin/backend
 
 CMD ["/usr/local/bin/backend"]
 EXPOSE 8080
