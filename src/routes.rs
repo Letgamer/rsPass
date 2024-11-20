@@ -268,6 +268,7 @@ pub async fn route_fetch(req: HttpRequest, auth: BearerAuth) -> impl Responder {
 #[utoipa::path(
     post,
     path = "/api/v1/sync/update",
+    request_body = UpdateRequest,
     responses(
         (status = 200, description = "Updated User Vault"),
         (status = 401, description = "JWT Token is invalid"),
