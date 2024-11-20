@@ -5,6 +5,7 @@ use log::{debug, info, warn};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashSet, env, sync::Mutex, time::{SystemTime, UNIX_EPOCH}};
+use uuid::Uuid;
 
 use crate::db::user_exists;
 
@@ -14,7 +15,8 @@ static BLACKLIST: Lazy<Mutex<HashSet<String>>> = Lazy::new(|| Mutex::new(HashSet
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
     pub sub: String,  // email
-    exp: usize,   // expiration time
+    pub exp: usize,   // expiration time
+    pub nonce: String, // random nonce
 }
 
 pub struct JwtAuth {
@@ -40,6 +42,7 @@ impl JwtAuth {
         let my_claims = Claims {
             sub: email.to_string(),
             exp: expiration,
+            nonce: Uuid::new_v4().to_string(),
         };
 
         encode(&Header::default(), &my_claims, &self.encoding_key)

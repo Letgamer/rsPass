@@ -8,12 +8,14 @@ use actix_web::web::scope;
 use backend_rspass::auth::validator;
 use actix_web_httpauth::middleware::HttpAuthentication;
 use uuid::Uuid;
+//use env_logger::Env;
 
 static INIT: Once = Once::new();
 
 pub fn setup() -> (Data<JwtAuth>, String) {
     INIT.call_once(|| {
-        env_logger::init();
+        //let log_level = env::var("LOG_LEVEL").unwrap_or_else(|_| "debug".to_string());
+        //env_logger::Builder::from_env(Env::default().default_filter_or("debug")).init();
     });
 
     let test_db = format!("./test_{}.db", Uuid::new_v4());
