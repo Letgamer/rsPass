@@ -62,4 +62,4 @@ docker pull ghcr.io/letgamer/rspass:main
 A docker-compose example file can also be found at [`docker-compose.yaml`](https://github.com/Letgamer/rsPass/blob/main/docker-compose.yaml).
 
 ## Routes
-See the Wiki for detailed Documentation about the Routes and API Logic
+See the [Wiki](https://github.com/Letgamer/rsPass/wiki) for detailed Documentation about the Routes and API Logic
