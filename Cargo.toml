@@ -23,6 +23,7 @@ tokio = "1.41.1"
 [dev-dependencies]
 actix-rt = "2.10.0"
 actix-test = "0.1.5"
+uuid = { version = "1", features = ["v4"] }
 
 [profile.dev]
 debug = true

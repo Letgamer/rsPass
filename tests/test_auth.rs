@@ -7,7 +7,7 @@ mod common;
 
 #[actix_rt::test]
 async fn test_register_success() {
-    let jwt_auth = common::setup();
+    let (jwt_auth, db_file) = common::setup();
     let jwt_auth_clone = jwt_auth.clone();
     let server = common::create_server(jwt_auth);
     let req = server.post("/api/v1/auth/register")
@@ -17,6 +17,7 @@ async fn test_register_success() {
         }));
 
     let mut response = req.await.unwrap();
+    println!("Status: {}", response.status());
     assert!(response.status().is_success());
 
     let body: LoginResponse = response.json().await.unwrap();
@@ -26,5 +27,5 @@ async fn test_register_success() {
     let claims = jwt_auth_clone.validate_token(&body.token).unwrap();
     assert_eq!(claims.sub, "test@example.com");
 
-    common::cleanup();
+    common::cleanup(&db_file);
 }

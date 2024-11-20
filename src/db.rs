@@ -11,7 +11,7 @@ fn get_connection() -> Result<Connection> {
     Connection::open(db_path)
 }
 
-pub fn initialize_database() {
+pub fn initialize_database() -> Result<()> {
     let db_path = get_db_path();
     if !Path::new(&db_path).exists() {
         info!("Creating new database at: {}", db_path);
@@ -40,6 +40,7 @@ pub fn initialize_database() {
         }
         info!("Database already existing at: {} is being used", db_path);
     }
+    Ok(())
 }
 
 pub fn user_exists(email: &str) -> Result<bool> {

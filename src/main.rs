@@ -43,7 +43,9 @@ async fn main() -> std::io::Result<()> {
     let log_level = env::var("LOG_LEVEL").unwrap_or_else(|_| "info".to_string());
     env_logger::Builder::from_env(Env::default().default_filter_or(log_level)).init();
 
-    initialize_database();
+    if let Err(e) = initialize_database() {
+        panic!("Failed to initialize test database: {}", e);
+    }
 
     let (host, port) = get_server_config();
     info!("Starting server at {}:{}", host, port);
