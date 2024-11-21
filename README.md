@@ -1,6 +1,7 @@
 # rsPass Backend 🦀
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/w/Letgamer/rsPass)
 ![GitHub top language](https://img.shields.io/github/languages/top/Letgamer/rsPass)
+![Github LOC](https://sloc.xyz/github/Letgamer/rsPass)
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/Letgamer/rsPass/.github%2Fworkflows%2Fdocker-publish.yml)
 ![GitHub repo size](https://img.shields.io/github/repo-size/Letgamer/rsPass) 
 [![Docker](https://badgen.net/badge/icon/docker?icon=docker&label)](https://https://docker.com/)
