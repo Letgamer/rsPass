@@ -159,7 +159,7 @@ async fn test_register_duplicate_email() {
         }))
         .await
         .unwrap();
-    assert_eq!(second_register.status(), StatusCode::UNAUTHORIZED);
+    assert_eq!(second_register.status(), 409);
 
     common::cleanup(&db_file);
 }

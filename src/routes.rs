@@ -120,20 +120,20 @@ pub async fn route_login(req_body: web::Json<LoginRequest>, jwt_auth: web::Data<
     responses(
         (status = 200, description = "User created and authenticated, JWT generated", body=LoginResponse),
         (status = 400, description = "Invalid payload"),
-        (status = 401, description = "User already exists"),
+        (status = 409, description = "User already exists"),
         (status = 500, description = "Database Error or JWT Generation Error")
     ),
     tag = "auth"
 )]
 #[post("/api/v1/auth/register")]
-pub async fn route_register(req_body: web::Json<LoginRequest>, jwt_auth: web::Data<JwtAuth>) -> impl Responder {
+pub async fn route_register(req_body: web::Json<RegisterRequest>, jwt_auth: web::Data<JwtAuth>) -> impl Responder {
     if let Err(response) = validate_format(&req_body) {
         return response;
     }
 
     debug!("Register attempt for email: {}", &req_body.email);
     match user_exists(&req_body.email) {
-        Ok(true) => HttpResponse::Unauthorized().finish(),
+        Ok(true) => HttpResponse::Conflict().finish(),
         Ok(false) => {
             match user_register(&req_body.email, &req_body.password_hash) {
                 Ok(()) => {

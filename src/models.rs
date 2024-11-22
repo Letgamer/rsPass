@@ -19,6 +19,7 @@ impl utoipa::Modify for SecurityAddon {
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema, Validate)]
+#[serde(deny_unknown_fields)] // This will cause a 400 Bad Request if there are unexpected fields
 pub struct PreLoginRequest {
     #[schema(format="email")]
     #[validate(email, length(max = 320))]
@@ -26,11 +27,12 @@ pub struct PreLoginRequest {
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema, Validate)]
+#[serde(deny_unknown_fields)]
 pub struct LoginRequest {
     #[schema(format = "email")]
     #[validate(email, length(max = 320))]
     pub email: String,
-    #[validate(length(max = 1024))]
+    #[validate(length(min = 5, max = 1024))]
     pub password_hash: String,
 }
 
@@ -40,16 +42,17 @@ pub struct LoginResponse {
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema, Validate)]
+#[serde(deny_unknown_fields)]
 pub struct RegisterRequest {
     #[schema(format = "email")]
     #[validate(email, length(max = 320))]
     pub email: String,
-    // Set password_hash to a specific Length!
-    #[validate(length(max = 1024))]
+    #[validate(length(min = 5, max = 1024))]
     pub password_hash: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema, Validate)]
+#[serde(deny_unknown_fields)]
 pub struct ChangeRequest {
     #[validate(length(max = 1024))]
     pub password_hash: String,
@@ -61,6 +64,7 @@ pub struct DataResponse {
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema, Validate)]
+#[serde(deny_unknown_fields)]
 pub struct UpdateRequest {
     #[validate(length(max = 1048576))]
     pub encrypted_data: String,
