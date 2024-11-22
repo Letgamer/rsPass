@@ -27,6 +27,10 @@ pub struct JwtAuth {
 impl JwtAuth {
     pub fn new() -> Self {
         let secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+
+        if secret.len() < 16 {
+            panic!("JWT_SECRET must be at least 16 characters long");
+        }
         JwtAuth {
             encoding_key: EncodingKey::from_secret(secret.as_bytes()),
             decoding_key: DecodingKey::from_secret(secret.as_bytes()),
