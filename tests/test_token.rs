@@ -34,7 +34,7 @@ async fn register(server: &actix_test::TestServer) {
 
 async fn try_authenticated_endpoints(server: &actix_test::TestServer, token: &str, expected_status: StatusCode) {
     // Test change password
-    let change_pwd = server.post("/api/v1/accounts/changepwd")
+    let change_pwd = server.post("/api/v1/account/changepwd")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send_json(&json!({
             "password_hash": "newhash123"
@@ -91,7 +91,7 @@ async fn test_blacklisted_token() {
     let token = login(&server).await;
 
     // Logout to blacklist token
-    let logout = server.get("/api/v1/accounts/logout")
+    let logout = server.get("/api/v1/account/logout")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await
@@ -114,7 +114,7 @@ async fn test_deleted_account_token() {
     let token = login(&server).await;
 
     // Delete account
-    let delete = server.get("/api/v1/accounts/delete")
+    let delete = server.get("/api/v1/account/delete")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .send()
         .await

@@ -31,7 +31,7 @@ async fn test_register_login_logout_flow() {
     let login_body: LoginResponse = login_resp.json().await.unwrap();
 
     // Logout
-    let logout_resp = server.get("/api/v1/accounts/logout")
+    let logout_resp = server.get("/api/v1/account/logout")
         .bearer_auth(&login_body.token)
         .send()
         .await
@@ -39,7 +39,7 @@ async fn test_register_login_logout_flow() {
     assert_eq!(logout_resp.status(), StatusCode::OK);
 
     // Try to use the logged-out token
-    let verify_logout = server.get("/api/v1/accounts/logout")
+    let verify_logout = server.get("/api/v1/account/logout")
         .bearer_auth(&login_body.token)
         .send()
         .await
@@ -67,7 +67,7 @@ async fn test_register_login_change_password_flow() {
 
     // Change Password
     println!("JWT: {}", &register_body.token);
-    let change_pwd_resp = server.post("/api/v1/accounts/changepwd")
+    let change_pwd_resp = server.post("/api/v1/account/changepwd")
         .bearer_auth(&register_body.token)
         .send_json(&json!({
             "password_hash": "newhash123"
@@ -116,7 +116,7 @@ async fn test_register_login_delete_flow() {
     let register_body: LoginResponse = register_resp.json().await.unwrap();
 
     // Delete Account
-    let delete_resp = server.get("/api/v1/accounts/delete")
+    let delete_resp = server.get("/api/v1/account/delete")
         .bearer_auth(&register_body.token)
         .send()
         .await

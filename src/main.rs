@@ -68,7 +68,7 @@ async fn main() -> std::io::Result<()> {
             .service(route_login)
             .service(route_register)
             .service(
-                scope("/api/v1/accounts")
+                scope("/api/v1/account")
                     .wrap(auth.clone())
                     .route("/changepwd", web::post().to(route_changepwd))
                     .route("/logout", web::get().to(route_logout))

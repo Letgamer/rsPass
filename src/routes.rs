@@ -60,7 +60,7 @@ pub async fn route_health() -> impl Responder {
     ),
     tag = "accounts"
 )]
-#[post("/api/v1/accounts/checkmail")]
+#[post("/api/v1/account/checkmail")]
 pub async fn route_email(req_body: web::Json<PreLoginRequest>) -> impl Responder {
     if let Err(response) = validate_format(&req_body) {
         return response;
@@ -155,7 +155,7 @@ pub async fn route_register(req_body: web::Json<LoginRequest>, jwt_auth: web::Da
 
 #[utoipa::path(
     post,
-    path = "/api/v1/accounts/changepwd",
+    path = "/api/v1/account/changepwd",
     request_body = ChangeRequest,
     responses(
         (status = 200, description = "Password changed successfully!"),
@@ -184,7 +184,7 @@ pub async fn route_changepwd(req: HttpRequest, req_body: web::Json<ChangeRequest
 
 #[utoipa::path(
     get,
-    path = "/api/v1/accounts/logout",
+    path = "/api/v1/account/logout",
     responses(
         (status = 200, description = "Logged out successfully!"),
         (status = 401, description = "JWT Token is invalid or already blacklisted")
@@ -207,7 +207,7 @@ pub async fn route_logout(auth: BearerAuth, jwt_auth: web::Data<JwtAuth>) -> imp
 
 #[utoipa::path(
     get,
-    path = "/api/v1/delete",
+    path = "/api/v1/account/delete",
     responses(
         (status = 200, description = "Account deleted successfully!"),
         (status = 400, description = "Invalid payload"),

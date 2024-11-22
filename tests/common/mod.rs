@@ -25,7 +25,7 @@ pub fn setup() -> (Data<JwtAuth>, String) {
     }
 
     // Initialize JwtAuth with test secret
-    std::env::set_var("JWT_SECRET", "test_secret");
+    std::env::set_var("JWT_SECRET", "test_secret_length_16");
 
     (Data::new(JwtAuth::new()), test_db)
 }
@@ -50,7 +50,7 @@ pub fn create_server(jwt_auth: Data<JwtAuth>) -> TestServer {
             .service(route_login)
             .service(route_register)
             .service(
-                scope("/api/v1/accounts")
+                scope("/api/v1/account")
                     .wrap(auth.clone())
                     .route("/changepwd", web::post().to(route_changepwd))
                     .route("/logout", web::get().to(route_logout))
