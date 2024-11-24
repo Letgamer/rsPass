@@ -1,3 +1,4 @@
+use actix_cors::Cors;
 use actix_web::{middleware::Logger, web, App, HttpServer};
 use actix_web_httpauth::middleware::HttpAuthentication;
 use dotenv::dotenv;
@@ -10,7 +11,6 @@ use tokio::{
 };
 use utoipa::OpenApi;
 use utoipa_actix_web::{scope, AppExt};
-use actix_cors::Cors;
 use utoipa_swagger_ui::SwaggerUi;
 
 use backend_rspass::{
