@@ -1,6 +1,6 @@
 use log::{error, info};
 use rusqlite::{params, Connection, Result};
-use std::{env, fs::OpenOptions, io::ErrorKind, path::Path, process};
+use std::{env, path::Path, process};
 
 pub fn get_db_path() -> String {
     env::var("DB_FILE").unwrap_or_else(|_| "./database.db".to_string())
@@ -13,9 +13,11 @@ fn get_connection() -> Result<Connection> {
 
 pub fn initialize_database() -> Result<()> {
     let db_path = get_db_path();
-    if !Path::new(&db_path).exists() {
-        info!("Creating new database at: {}", db_path);
-        if let Err(e) = get_connection().and_then(|conn| {
+
+    // Attempt to open the database
+    match get_connection() {
+        Ok(conn) => {
+            info!("Database at {} opened successfully.", db_path);
             conn.execute(
                 "CREATE TABLE IF NOT EXISTS users (
                     email TEXT PRIMARY KEY,
@@ -23,22 +25,17 @@ pub fn initialize_database() -> Result<()> {
                     encrypted_data TEXT DEFAULT ''
                 );",
                 [],
-            )
-        }) {
-            error!("Failed to initialize database: {}", e);
-            process::exit(1);
+            )?;
+            info!("Database initialized successfully.");
         }
-        info!("Database created successfully.");
-    } else {
-        if let Err(e) = OpenOptions::new().read(true).write(true).open(&db_path) {
-            match e.kind() {
-                ErrorKind::NotFound => error!("Database file not found."),
-                ErrorKind::PermissionDenied => error!("No permission to read/write the database."),
-                _ => error!("Failed to access database: {}", e),
+        Err(e) => {
+            if Path::new(&db_path).exists() {
+                error!("Failed to open existing database: {}", e);
+            } else {
+                error!("Database file not found, and creation failed: {}", e);
             }
             process::exit(1);
         }
-        info!("Database already existing at: {} is being used", db_path);
     }
     Ok(())
 }

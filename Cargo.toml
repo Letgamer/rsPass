@@ -24,9 +24,3 @@ uuid = { version = "1", features = ["v4"] }
 [dev-dependencies]
 actix-rt = "2.10.0"
 actix-test = "0.1.5"
-
-[profile.dev]
-debug = true
-opt-level = 0  # Slightly optimize debug builds for better runtime performance
-incremental = true
-lto = "off"
