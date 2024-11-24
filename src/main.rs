@@ -10,6 +10,7 @@ use tokio::{
 };
 use utoipa::OpenApi;
 use utoipa_actix_web::{scope, AppExt};
+use actix_cors::Cors;
 use utoipa_swagger_ui::SwaggerUi;
 
 use backend_rspass::{
@@ -62,9 +63,17 @@ async fn main() -> std::io::Result<()> {
     spawn(async move { run_blacklist_cleanup(cleanup_auth).await });
 
     HttpServer::new(move || {
+        let cors = Cors::default()
+            .allow_any_origin()
+            .allow_any_method()
+            .allow_any_header()
+            .max_age(3600);
+
         let auth = HttpAuthentication::with_fn(validator);
+
         let (app, _api_doc) = App::new()
             .wrap(Logger::default())
+            .wrap(cors)
             .app_data(web::Data::from(jwt_auth.clone()))
             .into_utoipa_app()
             .service(route_health)
