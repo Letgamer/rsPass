@@ -1,18 +1,22 @@
-use actix_web::{App, HttpServer, middleware::Logger, web};
+use actix_web::{middleware::Logger, web, App, HttpServer};
 use actix_web_httpauth::middleware::HttpAuthentication;
 use dotenv::dotenv;
 use env_logger::Env;
 use log::info;
 use std::{env, sync::Arc};
-use tokio::{spawn, time::{self, Duration}};
-use utoipa::{OpenApi};
-use utoipa_actix_web::{AppExt, scope};
+use tokio::{
+    spawn,
+    time::{self, Duration},
+};
+use utoipa::OpenApi;
+use utoipa_actix_web::{scope, AppExt};
 use utoipa_swagger_ui::SwaggerUi;
 
 use backend_rspass::{
-    auth::{JwtAuth, validator}, 
-    db::initialize_database, 
-    routes::*};
+    auth::{validator, JwtAuth},
+    db::initialize_database,
+    routes::*,
+};
 
 fn get_server_config() -> (String, String) {
     let host = env::var("HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
@@ -57,7 +61,7 @@ async fn main() -> std::io::Result<()> {
     let cleanup_auth = jwt_auth.clone();
     spawn(async move { run_blacklist_cleanup(cleanup_auth).await });
 
-    HttpServer::new(move|| {
+    HttpServer::new(move || {
         let auth = HttpAuthentication::with_fn(validator);
         let (app, _api_doc) = App::new()
             .wrap(Logger::default())
@@ -72,19 +76,18 @@ async fn main() -> std::io::Result<()> {
                     .wrap(auth.clone())
                     .route("/changepwd", web::post().to(route_changepwd))
                     .route("/logout", web::get().to(route_logout))
-                    .route("/delete", web::get().to(route_delete))
+                    .route("/delete", web::get().to(route_delete)),
             )
             .service(
                 scope("/api/v1/sync")
                     .wrap(auth)
                     .route("/fetch", web::get().to(route_fetch))
-                    .route("/update", web::post().to(route_update))
+                    .route("/update", web::post().to(route_update)),
             )
             .split_for_parts();
 
         app.service(
-            SwaggerUi::new("/swagger-ui/{_:.*}")
-                .url("/api-docs/openapi.json", ApiDoc::openapi())
+            SwaggerUi::new("/swagger-ui/{_:.*}").url("/api-docs/openapi.json", ApiDoc::openapi()),
         )
     })
     .bind(format!("{}:{}", host, port))?

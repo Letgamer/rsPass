@@ -1,12 +1,12 @@
-use actix_web::{get, post, HttpMessage, HttpRequest, HttpResponse, Responder, web};
-use actix_web_httpauth::{extractors::bearer::BearerAuth};
+use actix_web::{get, post, web, HttpMessage, HttpRequest, HttpResponse, Responder};
+use actix_web_httpauth::extractors::bearer::BearerAuth;
 use log::{debug, error, info};
-use utoipa::{OpenApi};
+use utoipa::OpenApi;
 use validator::Validate;
 
+use crate::auth::{Claims, JwtAuth};
 use crate::db::*;
 use crate::models::*;
-use crate::auth::{JwtAuth, Claims};
 
 // API Documentation struct
 #[derive(OpenApi)]
@@ -38,7 +38,6 @@ fn validate_format<T: Validate>(req_body: &web::Json<T>) -> Result<(), HttpRespo
     Ok(())
 }
 
-
 // Health check endpoint
 #[utoipa::path(
     responses((status = 200, description = "API is healthy")),
@@ -65,7 +64,7 @@ pub async fn route_email(req_body: web::Json<PreLoginRequest>) -> impl Responder
     if let Err(response) = validate_format(&req_body) {
         return response;
     }
-    
+
     debug!("Email check for: {}", req_body.email);
     match user_exists(&req_body.email) {
         Ok(true) => HttpResponse::Ok().finish(), // User exists
@@ -87,7 +86,10 @@ pub async fn route_email(req_body: web::Json<PreLoginRequest>) -> impl Responder
     tag = "auth"
 )]
 #[post("/api/v1/auth/login")]
-pub async fn route_login(req_body: web::Json<LoginRequest>, jwt_auth: web::Data<JwtAuth>) -> impl Responder {
+pub async fn route_login(
+    req_body: web::Json<LoginRequest>,
+    jwt_auth: web::Data<JwtAuth>,
+) -> impl Responder {
     if let Err(response) = validate_format(&req_body) {
         return response;
     }
@@ -95,19 +97,17 @@ pub async fn route_login(req_body: web::Json<LoginRequest>, jwt_auth: web::Data<
     debug!("Login attempt for email: {}", &req_body.email);
 
     match user_login(&req_body.email, &req_body.password_hash) {
-        Ok(true) => {
-            match jwt_auth.generate_token(&req_body.email) {
-                Ok(token) => HttpResponse::Ok().json(LoginResponse { token }),
-                Err(e) => {
-                    error!("Failed to generate token: {}", e);
-                    HttpResponse::InternalServerError().finish()
-                }
+        Ok(true) => match jwt_auth.generate_token(&req_body.email) {
+            Ok(token) => HttpResponse::Ok().json(LoginResponse { token }),
+            Err(e) => {
+                error!("Failed to generate token: {}", e);
+                HttpResponse::InternalServerError().finish()
             }
-        }
+        },
         Ok(false) => {
             match user_exists(&req_body.email) {
                 Ok(true) => HttpResponse::Unauthorized().finish(), // User exists but incorrect password
-                Ok(false) => HttpResponse::NotFound().finish(), // User does not exist
+                Ok(false) => HttpResponse::NotFound().finish(),    // User does not exist
                 Err(e) => handle_db_error(&e),
             }
         }
@@ -126,7 +126,10 @@ pub async fn route_login(req_body: web::Json<LoginRequest>, jwt_auth: web::Data<
     tag = "auth"
 )]
 #[post("/api/v1/auth/register")]
-pub async fn route_register(req_body: web::Json<RegisterRequest>, jwt_auth: web::Data<JwtAuth>) -> impl Responder {
+pub async fn route_register(
+    req_body: web::Json<RegisterRequest>,
+    jwt_auth: web::Data<JwtAuth>,
+) -> impl Responder {
     if let Err(response) = validate_format(&req_body) {
         return response;
     }
@@ -134,24 +137,19 @@ pub async fn route_register(req_body: web::Json<RegisterRequest>, jwt_auth: web:
     debug!("Register attempt for email: {}", &req_body.email);
     match user_exists(&req_body.email) {
         Ok(true) => HttpResponse::Conflict().finish(),
-        Ok(false) => {
-            match user_register(&req_body.email, &req_body.password_hash) {
-                Ok(()) => {
-                    match jwt_auth.generate_token(&req_body.email) {
-                        Ok(token) => HttpResponse::Ok().json(LoginResponse { token }),
-                        Err(e) => {
-                            error!("Failed to generate token: {}", e);
-                            HttpResponse::InternalServerError().finish()
-                        }
-                    }
+        Ok(false) => match user_register(&req_body.email, &req_body.password_hash) {
+            Ok(()) => match jwt_auth.generate_token(&req_body.email) {
+                Ok(token) => HttpResponse::Ok().json(LoginResponse { token }),
+                Err(e) => {
+                    error!("Failed to generate token: {}", e);
+                    HttpResponse::InternalServerError().finish()
                 }
-                Err(e) => handle_db_error(&e),
-            }
-        }
+            },
+            Err(e) => handle_db_error(&e),
+        },
         Err(e) => handle_db_error(&e),
     }
 }
-
 
 #[utoipa::path(
     post,
@@ -168,16 +166,19 @@ pub async fn route_register(req_body: web::Json<RegisterRequest>, jwt_auth: web:
         ("jwt_auth" = [])
     )
 )]
-pub async fn route_changepwd(req: HttpRequest, req_body: web::Json<ChangeRequest>, auth: BearerAuth) -> impl Responder {
+pub async fn route_changepwd(
+    req: HttpRequest,
+    req_body: web::Json<ChangeRequest>,
+    auth: BearerAuth,
+) -> impl Responder {
     debug!("authenticated for token: {}", auth.token());
     if let Some(claims) = req.extensions_mut().get::<Claims>() {
         info!("Change Password of: {}", &claims.sub);
-        match user_changepwd(&claims.sub, &req_body.password_hash){
+        match user_changepwd(&claims.sub, &req_body.password_hash) {
             Ok(()) => HttpResponse::Ok().finish(),
             Err(e) => handle_db_error(&e),
         }
-    }
-    else {
+    } else {
         HttpResponse::Unauthorized().finish()
     }
 }
@@ -219,20 +220,23 @@ pub async fn route_logout(auth: BearerAuth, jwt_auth: web::Data<JwtAuth>) -> imp
         ("jwt_auth" = [])
     )
 )]
-pub async fn route_delete(req: HttpRequest, jwt_auth: web::Data<JwtAuth>, auth: BearerAuth) -> impl Responder {
+pub async fn route_delete(
+    req: HttpRequest,
+    jwt_auth: web::Data<JwtAuth>,
+    auth: BearerAuth,
+) -> impl Responder {
     let token = auth.token();
     debug!("Deleting account with token: {}", token);
 
     jwt_auth.blacklist_token(&token);
-    
+
     if let Some(claims) = req.extensions_mut().get::<Claims>() {
         info!("Deleting account of: {}", &claims.sub);
-        match user_delete(&claims.sub){
+        match user_delete(&claims.sub) {
             Ok(()) => HttpResponse::Ok().finish(),
             Err(e) => handle_db_error(&e),
         }
-    }
-    else {
+    } else {
         HttpResponse::Unauthorized().finish()
     }
 }
@@ -255,12 +259,11 @@ pub async fn route_fetch(req: HttpRequest, auth: BearerAuth) -> impl Responder {
     debug!("Fetching vault with token: {}", token);
     if let Some(claims) = req.extensions_mut().get::<Claims>() {
         info!("Fetching vault of user: {}", &claims.sub);
-        match data_get(&claims.sub){
+        match data_get(&claims.sub) {
             Ok(encrypted_data) => HttpResponse::Ok().json(DataResponse { encrypted_data }),
             Err(e) => handle_db_error(&e),
         }
-    }
-    else {
+    } else {
         HttpResponse::InternalServerError().finish()
     }
 }
@@ -279,17 +282,20 @@ pub async fn route_fetch(req: HttpRequest, auth: BearerAuth) -> impl Responder {
         ("jwt_auth" = [])
     )
 )]
-pub async fn route_update(req: HttpRequest, req_body: web::Json<UpdateRequest>, auth: BearerAuth) -> impl Responder {
+pub async fn route_update(
+    req: HttpRequest,
+    req_body: web::Json<UpdateRequest>,
+    auth: BearerAuth,
+) -> impl Responder {
     let token = auth.token();
     debug!("Updating vault with token: {}", token);
     if let Some(claims) = req.extensions_mut().get::<Claims>() {
         info!("Updating vault of user: {}", &claims.sub);
-        match data_update(&claims.sub, &req_body.encrypted_data){
+        match data_update(&claims.sub, &req_body.encrypted_data) {
             Ok(()) => HttpResponse::Ok().finish(),
             Err(e) => handle_db_error(&e),
         }
-    }
-    else {
+    } else {
         HttpResponse::InternalServerError().finish()
     }
 }

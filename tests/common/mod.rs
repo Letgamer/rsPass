@@ -1,12 +1,12 @@
-use actix_web::web::Data;
-use backend_rspass::{auth::JwtAuth, db::initialize_database, routes::*};
-use std::{env, fs, sync::Once};
-use actix_web::App;
 use actix_test::TestServer;
 use actix_web::web;
 use actix_web::web::scope;
-use backend_rspass::auth::validator;
+use actix_web::web::Data;
+use actix_web::App;
 use actix_web_httpauth::middleware::HttpAuthentication;
+use backend_rspass::auth::validator;
+use backend_rspass::{auth::JwtAuth, db::initialize_database, routes::*};
+use std::{env, fs, sync::Once};
 use uuid::Uuid;
 //use env_logger::Env;
 
@@ -54,13 +54,13 @@ pub fn create_server(jwt_auth: Data<JwtAuth>) -> TestServer {
                     .wrap(auth.clone())
                     .route("/changepwd", web::post().to(route_changepwd))
                     .route("/logout", web::get().to(route_logout))
-                    .route("/delete", web::get().to(route_delete))
+                    .route("/delete", web::get().to(route_delete)),
             )
             .service(
                 scope("/api/v1/sync")
                     .wrap(auth)
                     .route("/fetch", web::get().to(route_fetch))
-                    .route("/update", web::post().to(route_update))
+                    .route("/update", web::post().to(route_update)),
             )
     })
 }

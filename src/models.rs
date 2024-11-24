@@ -1,5 +1,8 @@
 use serde::{Deserialize, Serialize};
-use utoipa::{ToSchema, openapi::security::{HttpAuthScheme, HttpBuilder, SecurityScheme}};
+use utoipa::{
+    openapi::security::{HttpAuthScheme, HttpBuilder, SecurityScheme},
+    ToSchema,
+};
 use validator::Validate;
 
 pub struct SecurityAddon;
@@ -9,11 +12,13 @@ impl utoipa::Modify for SecurityAddon {
         let components = openapi.components.get_or_insert_with(Default::default);
         components.security_schemes.insert(
             "jwt_auth".to_string(),
-            SecurityScheme::Http(HttpBuilder::new()
-                .scheme(HttpAuthScheme::Bearer) // Use HttpAuthScheme::Bearer here
-                .bearer_format("JWT")
-                .description(Some("Enter JWT token"))
-                .build()),
+            SecurityScheme::Http(
+                HttpBuilder::new()
+                    .scheme(HttpAuthScheme::Bearer) // Use HttpAuthScheme::Bearer here
+                    .bearer_format("JWT")
+                    .description(Some("Enter JWT token"))
+                    .build(),
+            ),
         );
     }
 }
@@ -21,7 +26,7 @@ impl utoipa::Modify for SecurityAddon {
 #[derive(Debug, Serialize, Deserialize, ToSchema, Validate)]
 #[serde(deny_unknown_fields)] // This will cause a 400 Bad Request if there are unexpected fields
 pub struct PreLoginRequest {
-    #[schema(format="email")]
+    #[schema(format = "email")]
     #[validate(email, length(max = 320))]
     pub email: String,
 }

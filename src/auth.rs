@@ -1,10 +1,17 @@
 use actix_web::{dev::ServiceRequest, error, Error, HttpMessage};
-use actix_web_httpauth::{extractors::bearer::BearerAuth};
-use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation, errors::Error as JwtError};
+use actix_web_httpauth::extractors::bearer::BearerAuth;
+use jsonwebtoken::{
+    decode, encode, errors::Error as JwtError, DecodingKey, EncodingKey, Header, Validation,
+};
 use log::{debug, info, warn};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashSet, env, sync::Mutex, time::{SystemTime, UNIX_EPOCH}};
+use std::{
+    collections::HashSet,
+    env,
+    sync::Mutex,
+    time::{SystemTime, UNIX_EPOCH},
+};
 use uuid::Uuid;
 
 use crate::db::user_exists;
@@ -14,8 +21,8 @@ static BLACKLIST: Lazy<Mutex<HashSet<String>>> = Lazy::new(|| Mutex::new(HashSet
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
-    pub sub: String,  // email
-    pub exp: usize,   // expiration time
+    pub sub: String,   // email
+    pub exp: usize,    // expiration time
     pub nonce: String, // random nonce
 }
 
@@ -41,7 +48,8 @@ impl JwtAuth {
         let expiration = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
-            .as_secs() as usize + 3600; // 1 hour
+            .as_secs() as usize
+            + 3600; // 1 hour
 
         let my_claims = Claims {
             sub: email.to_string(),
@@ -77,7 +85,10 @@ impl JwtAuth {
                 false
             }
         });
-        debug!("Blacklist cleanup completed. Current size: {}", blacklist.len());
+        debug!(
+            "Blacklist cleanup completed. Current size: {}",
+            blacklist.len()
+        );
     }
 
     pub fn validate_token(&self, token: &str) -> Result<Claims, JwtError> {
@@ -85,15 +96,19 @@ impl JwtAuth {
         let token_data = decode::<Claims>(token, &self.decoding_key, &validation)?;
         let email = &token_data.claims.sub;
         info!("validate_token email: {}", email);
-        match user_exists(&email).map_err(|_| JwtError::from(jsonwebtoken::errors::ErrorKind::InvalidToken))? {
+        match user_exists(&email)
+            .map_err(|_| JwtError::from(jsonwebtoken::errors::ErrorKind::InvalidToken))?
+        {
             true => Ok(token_data.claims),
-            false => Err(JwtError::from(jsonwebtoken::errors::ErrorKind::InvalidToken)),
+            false => Err(JwtError::from(
+                jsonwebtoken::errors::ErrorKind::InvalidToken,
+            )),
         }
     }
 }
 
 pub async fn validator(
-     req: ServiceRequest,
+    req: ServiceRequest,
     credentials: Option<BearerAuth>,
 ) -> Result<ServiceRequest, (Error, ServiceRequest)> {
     let Some(credentials) = credentials else {
@@ -115,7 +130,6 @@ pub async fn validator(
         Err(_) => {
             warn!("Invalid JWT token");
             Err((error::ErrorUnauthorized("Invalid token"), req))
-        },
+        }
     }
-
 }

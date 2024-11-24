@@ -83,10 +83,7 @@ pub fn user_changepwd(email: &str, password_hash: &str) -> Result<()> {
 
 pub fn user_delete(email: &str) -> Result<()> {
     let conn = get_connection()?;
-    conn.execute(
-        "DELETE FROM users WHERE email = ?1",
-        params![email],
-    )?;
+    conn.execute("DELETE FROM users WHERE email = ?1", params![email])?;
     Ok(())
 }
 

@@ -1,6 +1,4 @@
-use backend_rspass::{
-    models::*,
-};
+use backend_rspass::models::*;
 use serde_json::json;
 
 mod common;
@@ -10,11 +8,10 @@ async fn test_register_success() {
     let (jwt_auth, db_file) = common::setup();
     let jwt_auth_clone = jwt_auth.clone();
     let server = common::create_server(jwt_auth);
-    let req = server.post("/api/v1/auth/register")
-        .send_json(&json!({
-            "email": "test@example.com",
-            "password_hash": "hash123"
-        }));
+    let req = server.post("/api/v1/auth/register").send_json(&json!({
+        "email": "test@example.com",
+        "password_hash": "hash123"
+    }));
 
     let mut response = req.await.unwrap();
     println!("Status: {}", response.status());
