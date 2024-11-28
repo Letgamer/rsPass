@@ -1,0 +1,196 @@
+{
+  "spdxVersion": "SPDX-2.3",
+  "dataLicense": "CC0-1.0",
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "name": "SPDXRef-nix-store-icfizg913x6cli9jpz70ypxzagl5siqd-backend-rspass-0.1.0.drv",
+  "documentNamespace": "sbomnix://0b526d4c-98c4-472d-aa48-a25cdc02a226",
+  "creationInfo": {
+    "created": "2024-11-29T00:32:49.751596+01:00",
+    "creators": [
+      "Tool: sbomnix-1.7.0"
+    ]
+  },
+  "comment": "included dependencies: 'runtime_only'",
+  "packages": [
+    {
+      "name": "backend_rspass",
+      "SPDXID": "SPDXRef-nix-store-icfizg913x6cli9jpz70ypxzagl5siqd-backend-rspass-0.1.0.drv",
+      "versionInfo": "0.1.0",
+      "downloadLocation": "NOASSERTION",
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "SECURITY",
+          "referenceType": "cpe23Type",
+          "referenceLocator": "cpe:2.3:a:backend_rspass:backend_rspass:0.1.0:*:*:*:*:*:*:*"
+        },
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:nix/backend_rspass@0.1.0"
+        }
+      ]
+    },
+    {
+      "name": "gcc",
+      "SPDXID": "SPDXRef-nix-store-d501c7jfvisxah7bpaw3a7lx0z1l26qn-gcc-13.3.0.drv",
+      "versionInfo": "13.3.0",
+      "downloadLocation": "NOASSERTION",
+      "homepage": "https://gcc.gnu.org/",
+      "summary": "GNU Compiler Collection, version 13.3.0",
+      "licenseInfoFromFiles": [
+        "GPL-3.0-or-later"
+      ],
+      "licenseConcluded": "GPL-3.0-or-later",
+      "licenseDeclared": "GPL-3.0-or-later",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "SECURITY",
+          "referenceType": "cpe23Type",
+          "referenceLocator": "cpe:2.3:a:gcc:gcc:13.3.0:*:*:*:*:*:*:*"
+        },
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:nix/gcc@13.3.0"
+        }
+      ]
+    },
+    {
+      "name": "glibc",
+      "SPDXID": "SPDXRef-nix-store-nxxwgq50lc44h9jb92d7wpya8dzdyv4f-glibc-2.40-36.drv",
+      "versionInfo": "2.40-36",
+      "downloadLocation": "NOASSERTION",
+      "homepage": "https://www.gnu.org/software/libc/",
+      "summary": "GNU C Library",
+      "licenseInfoFromFiles": [
+        "LGPL-2.0-or-later"
+      ],
+      "licenseConcluded": "LGPL-2.0-or-later",
+      "licenseDeclared": "LGPL-2.0-or-later",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "SECURITY",
+          "referenceType": "cpe23Type",
+          "referenceLocator": "cpe:2.3:a:glibc:glibc:2.40-36:*:*:*:*:*:*:*"
+        },
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:nix/glibc@2.40-36"
+        }
+      ]
+    },
+    {
+      "name": "libidn2",
+      "SPDXID": "SPDXRef-nix-store-sx5ffrd4v5vqckzmh46jk0ql9az6s7fv-libidn2-2.3.7.drv",
+      "versionInfo": "2.3.7",
+      "downloadLocation": "NOASSERTION",
+      "homepage": "https://www.gnu.org/software/libidn/#libidn2",
+      "summary": "Free software implementation of IDNA2008 and TR46",
+      "licenseInfoFromFiles": [
+        "LGPL-3.0-or-later",
+        "GPL-2.0-or-later",
+        "GPL-3.0-or-later"
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "SECURITY",
+          "referenceType": "cpe23Type",
+          "referenceLocator": "cpe:2.3:a:gnu:libidn2:2.3.7:*:*:*:*:*:*:*"
+        },
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:nix/libidn2@2.3.7"
+        }
+      ]
+    },
+    {
+      "name": "libunistring",
+      "SPDXID": "SPDXRef-nix-store-gxn78nms6mmkhs6ksnf1m6jkw50xdrgf-libunistring-1.2.drv",
+      "versionInfo": "1.2",
+      "downloadLocation": "NOASSERTION",
+      "homepage": "https://www.gnu.org/software/libunistring/",
+      "summary": "Unicode string library",
+      "licenseInfoFromFiles": [
+        "LGPL-3.0-or-later"
+      ],
+      "licenseConcluded": "LGPL-3.0-or-later",
+      "licenseDeclared": "LGPL-3.0-or-later",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "SECURITY",
+          "referenceType": "cpe23Type",
+          "referenceLocator": "cpe:2.3:a:gnu:libunistring:1.2:*:*:*:*:*:*:*"
+        },
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:nix/libunistring@1.2"
+        }
+      ]
+    },
+    {
+      "name": "xgcc",
+      "SPDXID": "SPDXRef-nix-store-cvx2cpp14a7kkvj92g41zm4pycj1d0kw-xgcc-13.3.0.drv",
+      "versionInfo": "13.3.0",
+      "downloadLocation": "NOASSERTION",
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "SECURITY",
+          "referenceType": "cpe23Type",
+          "referenceLocator": "cpe:2.3:a:xgcc:xgcc:13.3.0:*:*:*:*:*:*:*"
+        },
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:nix/xgcc@13.3.0"
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "spdxElementId": "SPDXRef-nix-store-icfizg913x6cli9jpz70ypxzagl5siqd-backend-rspass-0.1.0.drv",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-nix-store-d501c7jfvisxah7bpaw3a7lx0z1l26qn-gcc-13.3.0.drv"
+    },
+    {
+      "spdxElementId": "SPDXRef-nix-store-icfizg913x6cli9jpz70ypxzagl5siqd-backend-rspass-0.1.0.drv",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-nix-store-nxxwgq50lc44h9jb92d7wpya8dzdyv4f-glibc-2.40-36.drv"
+    },
+    {
+      "spdxElementId": "SPDXRef-nix-store-d501c7jfvisxah7bpaw3a7lx0z1l26qn-gcc-13.3.0.drv",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-nix-store-nxxwgq50lc44h9jb92d7wpya8dzdyv4f-glibc-2.40-36.drv"
+    },
+    {
+      "spdxElementId": "SPDXRef-nix-store-nxxwgq50lc44h9jb92d7wpya8dzdyv4f-glibc-2.40-36.drv",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-nix-store-cvx2cpp14a7kkvj92g41zm4pycj1d0kw-xgcc-13.3.0.drv"
+    },
+    {
+      "spdxElementId": "SPDXRef-nix-store-nxxwgq50lc44h9jb92d7wpya8dzdyv4f-glibc-2.40-36.drv",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-nix-store-sx5ffrd4v5vqckzmh46jk0ql9az6s7fv-libidn2-2.3.7.drv"
+    },
+    {
+      "spdxElementId": "SPDXRef-nix-store-sx5ffrd4v5vqckzmh46jk0ql9az6s7fv-libidn2-2.3.7.drv",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-nix-store-gxn78nms6mmkhs6ksnf1m6jkw50xdrgf-libunistring-1.2.drv"
+    }
+  ]
+}

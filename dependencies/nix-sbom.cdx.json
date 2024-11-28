@@ -1,0 +1,232 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.4",
+  "version": 1,
+  "serialNumber": "urn:uuid:0b526d4c-98c4-472d-aa48-a25cdc02a226",
+  "metadata": {
+    "timestamp": "2024-11-29T00:32:49.730886+01:00",
+    "properties": [
+      {
+        "name": "sbom_type",
+        "value": "runtime_only"
+      },
+      {
+        "name": "sbom_dependencies_depth",
+        "value": "100"
+      }
+    ],
+    "tools": [
+      {
+        "vendor": "TII",
+        "name": "sbomnix",
+        "version": "1.7.0"
+      }
+    ],
+    "component": {
+      "type": "library",
+      "bom-ref": "/nix/store/icfizg913x6cli9jpz70ypxzagl5siqd-backend_rspass-0.1.0.drv",
+      "name": "backend_rspass",
+      "version": "0.1.0",
+      "purl": "pkg:nix/backend_rspass@0.1.0",
+      "cpe": "cpe:2.3:a:backend_rspass:backend_rspass:0.1.0:*:*:*:*:*:*:*",
+      "properties": [
+        {
+          "name": "nix:output_path",
+          "value": "/nix/store/y822k8119xrz6k89v5a7ka75gknd03am-backend_rspass-0.1.0"
+        },
+        {
+          "name": "nix:drv_path",
+          "value": "/nix/store/icfizg913x6cli9jpz70ypxzagl5siqd-backend_rspass-0.1.0.drv"
+        }
+      ]
+    }
+  },
+  "components": [
+    {
+      "type": "library",
+      "bom-ref": "/nix/store/d501c7jfvisxah7bpaw3a7lx0z1l26qn-gcc-13.3.0.drv",
+      "name": "gcc",
+      "version": "13.3.0",
+      "purl": "pkg:nix/gcc@13.3.0",
+      "cpe": "cpe:2.3:a:gcc:gcc:13.3.0:*:*:*:*:*:*:*",
+      "description": "GNU Compiler Collection, version 13.3.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-3.0-or-later"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "nix:output_path",
+          "value": "/nix/store/97f3gw9vpyxvwjv2i673isvg92q65mwn-gcc-13.3.0-lib"
+        },
+        {
+          "name": "nix:output_path",
+          "value": "/nix/store/nhdjqagplar2fdrqnrxlab8vg9i36b3d-gcc-13.3.0-libgcc"
+        },
+        {
+          "name": "nix:drv_path",
+          "value": "/nix/store/d501c7jfvisxah7bpaw3a7lx0z1l26qn-gcc-13.3.0.drv"
+        },
+        {
+          "name": "homepage",
+          "value": "https://gcc.gnu.org/"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "/nix/store/nxxwgq50lc44h9jb92d7wpya8dzdyv4f-glibc-2.40-36.drv",
+      "name": "glibc",
+      "version": "2.40-36",
+      "purl": "pkg:nix/glibc@2.40-36",
+      "cpe": "cpe:2.3:a:glibc:glibc:2.40-36:*:*:*:*:*:*:*",
+      "description": "GNU C Library",
+      "licenses": [
+        {
+          "license": {
+            "id": "LGPL-2.0-or-later"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "nix:output_path",
+          "value": "/nix/store/pacbfvpzqz2mksby36awvbcn051zcji3-glibc-2.40-36"
+        },
+        {
+          "name": "nix:drv_path",
+          "value": "/nix/store/nxxwgq50lc44h9jb92d7wpya8dzdyv4f-glibc-2.40-36.drv"
+        },
+        {
+          "name": "homepage",
+          "value": "https://www.gnu.org/software/libc/"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "/nix/store/sx5ffrd4v5vqckzmh46jk0ql9az6s7fv-libidn2-2.3.7.drv",
+      "name": "libidn2",
+      "version": "2.3.7",
+      "purl": "pkg:nix/libidn2@2.3.7",
+      "cpe": "cpe:2.3:a:gnu:libidn2:2.3.7:*:*:*:*:*:*:*",
+      "description": "Free software implementation of IDNA2008 and TR46",
+      "licenses": [
+        {
+          "license": {
+            "id": "LGPL-3.0-or-later"
+          }
+        },
+        {
+          "license": {
+            "id": "GPL-2.0-or-later"
+          }
+        },
+        {
+          "license": {
+            "id": "GPL-3.0-or-later"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "nix:output_path",
+          "value": "/nix/store/qwjjm4j652ck9izaid7bz63s4hd5bnha-libidn2-2.3.7"
+        },
+        {
+          "name": "nix:drv_path",
+          "value": "/nix/store/sx5ffrd4v5vqckzmh46jk0ql9az6s7fv-libidn2-2.3.7.drv"
+        },
+        {
+          "name": "homepage",
+          "value": "https://www.gnu.org/software/libidn/#libidn2"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "/nix/store/gxn78nms6mmkhs6ksnf1m6jkw50xdrgf-libunistring-1.2.drv",
+      "name": "libunistring",
+      "version": "1.2",
+      "purl": "pkg:nix/libunistring@1.2",
+      "cpe": "cpe:2.3:a:gnu:libunistring:1.2:*:*:*:*:*:*:*",
+      "description": "Unicode string library",
+      "licenses": [
+        {
+          "license": {
+            "id": "LGPL-3.0-or-later"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "nix:output_path",
+          "value": "/nix/store/6pqgj71r0850b0cd95yxx0d52zax016i-libunistring-1.2"
+        },
+        {
+          "name": "nix:drv_path",
+          "value": "/nix/store/gxn78nms6mmkhs6ksnf1m6jkw50xdrgf-libunistring-1.2.drv"
+        },
+        {
+          "name": "homepage",
+          "value": "https://www.gnu.org/software/libunistring/"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "/nix/store/cvx2cpp14a7kkvj92g41zm4pycj1d0kw-xgcc-13.3.0.drv",
+      "name": "xgcc",
+      "version": "13.3.0",
+      "purl": "pkg:nix/xgcc@13.3.0",
+      "cpe": "cpe:2.3:a:xgcc:xgcc:13.3.0:*:*:*:*:*:*:*",
+      "properties": [
+        {
+          "name": "nix:output_path",
+          "value": "/nix/store/2d5spnl8j5r4n1s4bj1zmra7mwx0f1n8-xgcc-13.3.0-libgcc"
+        },
+        {
+          "name": "nix:drv_path",
+          "value": "/nix/store/cvx2cpp14a7kkvj92g41zm4pycj1d0kw-xgcc-13.3.0.drv"
+        }
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "/nix/store/icfizg913x6cli9jpz70ypxzagl5siqd-backend_rspass-0.1.0.drv",
+      "dependsOn": [
+        "/nix/store/d501c7jfvisxah7bpaw3a7lx0z1l26qn-gcc-13.3.0.drv",
+        "/nix/store/nxxwgq50lc44h9jb92d7wpya8dzdyv4f-glibc-2.40-36.drv"
+      ]
+    },
+    {
+      "ref": "/nix/store/d501c7jfvisxah7bpaw3a7lx0z1l26qn-gcc-13.3.0.drv",
+      "dependsOn": [
+        "/nix/store/nxxwgq50lc44h9jb92d7wpya8dzdyv4f-glibc-2.40-36.drv"
+      ]
+    },
+    {
+      "ref": "/nix/store/nxxwgq50lc44h9jb92d7wpya8dzdyv4f-glibc-2.40-36.drv",
+      "dependsOn": [
+        "/nix/store/cvx2cpp14a7kkvj92g41zm4pycj1d0kw-xgcc-13.3.0.drv",
+        "/nix/store/sx5ffrd4v5vqckzmh46jk0ql9az6s7fv-libidn2-2.3.7.drv"
+      ]
+    },
+    {
+      "ref": "/nix/store/sx5ffrd4v5vqckzmh46jk0ql9az6s7fv-libidn2-2.3.7.drv",
+      "dependsOn": [
+        "/nix/store/gxn78nms6mmkhs6ksnf1m6jkw50xdrgf-libunistring-1.2.drv"
+      ]
+    },
+    {
+      "ref": "/nix/store/gxn78nms6mmkhs6ksnf1m6jkw50xdrgf-libunistring-1.2.drv"
+    },
+    {
+      "ref": "/nix/store/cvx2cpp14a7kkvj92g41zm4pycj1d0kw-xgcc-13.3.0.drv"
+    }
+  ]
+}
