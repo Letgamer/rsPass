@@ -56,5 +56,7 @@ jobs:
         env:
           TAGS: ${{ env.IMAGE_NAME}}
         run: |
-          DIGEST=$(skopeo inspect docker://${{ env.REGISTRY  | toLower }}/${{ env.IMAGE_NAME | toLower }}:latest --format "{{.Digest}}")
-          echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
+          REGISTRY=$(echo "${{ env.REGISTRY }}" | tr '[:upper:]' '[:lower:]')
+          IMAGE_NAME=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
+          DIGEST=$(skopeo inspect docker://${REGISTRY}/${IMAGE_NAME}:latest --format "{{.Digest}}")
+          echo "${IMAGE_NAME}" | xargs -I {} cosign sign --yes {}@${DIGEST}
