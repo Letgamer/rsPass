@@ -34,17 +34,6 @@ jobs:
       - name: Build Docker image with Nix
         run: nix build .#docker --out-link ./docker-result
 
-        # Extract the tar file
-      - name: Extract Docker Image
-        run: |
-          mkdir -p ./docker-image
-          tar -xf ./docker-result -C ./docker-image
-
-      - name: Inspect Docker Result
-        run: |
-          ls -la ./docker-result
-          ls -la ./docker-image
-
       # Log into the Docker registry
       - name: Log into registry ${{ env.REGISTRY }}
         uses: docker/login-action@v3
@@ -58,7 +47,10 @@ jobs:
         run: |
           REGISTRY=$(echo "${{ env.REGISTRY }}" | tr '[:upper:]' '[:lower:]')
           IMAGE_NAME=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
-          skopeo copy oci:./docker-image docker://${REGISTRY}/${IMAGE_NAME}:latest
+          docker load -i ./docker-result
+          IMAGE_ID=$(docker images --format '{{.ID}}' | head -n 1)
+          docker tag <loaded-image-id> ${REGISTRY}/${IMAGE_NAME}:latest
+          docker push ${REGISTRY}/${IMAGE_NAME}:latest
         env:
           IMAGE_NAME: ${{ env.IMAGE_NAME}}
           REGISTRY: ${{ env.REGISTRY}}
