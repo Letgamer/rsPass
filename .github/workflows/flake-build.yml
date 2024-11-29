@@ -2,8 +2,7 @@ name: "Multi-Platform Release Package"
 
 on:
   push:
-    tags:
-      - "v*"
+    tags: [ 'v*.*.*' ]
 
 jobs:
   release:
