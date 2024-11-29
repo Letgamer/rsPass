@@ -49,7 +49,7 @@ jobs:
           IMAGE_NAME=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
           docker load -i ./docker-result
           IMAGE_ID=$(docker images --format '{{.ID}}' | head -n 1)
-          docker tag <loaded-image-id> ${REGISTRY}/${IMAGE_NAME}:latest
+          docker tag ${IMAGE_ID} ${REGISTRY}/${IMAGE_NAME}:latest
           docker push ${REGISTRY}/${IMAGE_NAME}:latest
         env:
           IMAGE_NAME: ${{ env.IMAGE_NAME}}
