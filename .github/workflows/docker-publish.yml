@@ -45,21 +45,16 @@ jobs:
       # Push the built Docker image to the registry
       - name: Push Docker image
         run: |
-          IMAGE_TAGS=$(
-            nix eval --json .#docker.meta.tags | jq -r '.[]' | xargs
-          )
-          for TAG in ${IMAGE_TAGS}; do
-            skopeo copy oci:docker-result docker://${{ env.REGISTRY }}/${{ env.IMAGE_NAME | toLower}}:${TAG}
-          done
+          skopeo copy oci:docker-result docker://${{ env.REGISTRY }}/${{ env.IMAGE_NAME | toLower}}:latest
         env:
           IMAGE_NAME: ${{ env.IMAGE_NAME | toLower}}
-          REGISTRY: ${{ env.REGISTRY }}
+          REGISTRY: ${{ env.REGISTRY  | toLower }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Sign the resulting Docker image digest
       - name: Sign the published Docker image
         env:
-          TAGS: ${{ env.IMAGE_NAME }}
+          TAGS: ${{ env.IMAGE_NAME  | toLower }}
         run: |
-          DIGEST=$(skopeo inspect docker://${{ env.REGISTRY }}/${{ env.IMAGE_NAME | toLower }}:latest --format "{{.Digest}}")
+          DIGEST=$(skopeo inspect docker://${{ env.REGISTRY  | toLower }}/${{ env.IMAGE_NAME | toLower }}:latest --format "{{.Digest}}")
           echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
