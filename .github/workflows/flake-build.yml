@@ -1,0 +1,63 @@
+name: "Multi-Platform Release Package"
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out the repository
+      uses: actions/checkout@v4
+
+    - name: Install Nix
+      uses: cachix/install-nix-action@v27
+      with:
+        github_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build for Linux x86_64
+      run: nix build .#backend_rspass.x86_64-linux
+      env:
+        NIXPKGS_ALLOW_UNSUPPORTED_SYSTEM: "1"
+
+    - name: Build for Linux aarch64
+      run: nix build .#backend_rspass.aarch64-linux
+      env:
+        NIXPKGS_ALLOW_UNSUPPORTED_SYSTEM: "1"
+
+    - name: Build for macOS x86_64
+      run: nix build .#backend_rspass.x86_64-darwin
+      env:
+        NIXPKGS_ALLOW_UNSUPPORTED_SYSTEM: "1"
+
+    - name: Build for macOS aarch64
+      run: nix build .#backend_rspass.aarch64-darwin
+      env:
+        NIXPKGS_ALLOW_UNSUPPORTED_SYSTEM: "1"
+
+
+    - name: Upload package artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: release-packages
+        path: |
+          ./result-backend_rspass-x86_64-linux/bin/backend_rspass
+          ./result-backend_rspass-aarch64-linux/bin/backend_rspass
+          ./result-backend_rspass-x86_64-darwin/bin/backend_rspass
+          ./result-backend_rspass-aarch64-darwin/bin/backend_rspass
+
+    - name: Create a GitHub Release
+      uses: ncipollo/release-action@v1
+      with:
+        artifacts: |
+          ./result-backend_rspass-x86_64-linux/bin/backend_rspass
+          ./result-backend_rspass-aarch64-linux/bin/backend_rspass
+          ./result-backend_rspass-x86_64-darwin/bin/backend_rspass
+          ./result-backend_rspass-aarch64-darwin/bin/backend_rspass
+        token: ${{ secrets.GITHUB_TOKEN }}
+        tag: ${{ github.ref_name }}
+        name: Release ${{ github.ref_name }}
+        body: |
+          Multi-platform release package for backend_rspass.
