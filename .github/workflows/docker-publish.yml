@@ -47,14 +47,14 @@ jobs:
         run: |
           skopeo copy oci:docker-result docker://${{ env.REGISTRY }}/${{ env.IMAGE_NAME | toLower}}:latest
         env:
-          IMAGE_NAME: ${{ env.IMAGE_NAME | toLower}}
-          REGISTRY: ${{ env.REGISTRY  | toLower }}
+          IMAGE_NAME: ${{ env.IMAGE_NAME}}
+          REGISTRY: ${{ env.REGISTRY}}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Sign the resulting Docker image digest
       - name: Sign the published Docker image
         env:
-          TAGS: ${{ env.IMAGE_NAME  | toLower }}
+          TAGS: ${{ env.IMAGE_NAME}}
         run: |
           DIGEST=$(skopeo inspect docker://${{ env.REGISTRY  | toLower }}/${{ env.IMAGE_NAME | toLower }}:latest --format "{{.Digest}}")
           echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
