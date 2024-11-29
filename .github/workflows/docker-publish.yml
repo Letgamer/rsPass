@@ -49,10 +49,10 @@ jobs:
             nix eval --json .#docker.meta.tags | jq -r '.[]' | xargs
           )
           for TAG in ${IMAGE_TAGS}; do
-            skopeo copy oci:docker-result docker://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}
+            skopeo copy oci:docker-result docker://${{ env.REGISTRY }}/${{ env.IMAGE_NAME | toLower}}:${TAG}
           done
         env:
-          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          IMAGE_NAME: ${{ env.IMAGE_NAME | toLower}}
           REGISTRY: ${{ env.REGISTRY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -61,5 +61,5 @@ jobs:
         env:
           TAGS: ${{ env.IMAGE_NAME }}
         run: |
-          DIGEST=$(skopeo inspect docker://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest --format "{{.Digest}}")
+          DIGEST=$(skopeo inspect docker://${{ env.REGISTRY }}/${{ env.IMAGE_NAME | toLower }}:latest --format "{{.Digest}}")
           echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
