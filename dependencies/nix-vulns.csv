@@ -1,2 +1,0 @@
-"vuln_id","url","package","version_local","severity","grype","osv","sum","sortcol"
-"MAL-2022-4301","https://osv.dev/MAL-2022-4301","libidn2","2.3.7","","0","1","1","2022A0000004301"

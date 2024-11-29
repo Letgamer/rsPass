@@ -76,6 +76,7 @@
             pkgs.cargo-cyclonedx
             pkgs.graphviz
             pkgs.sbomnix
+            pkgs.cargo-audit
           ];
 
           shellHook = ''
@@ -86,8 +87,7 @@
             alias cargo-sbom='cargo cyclonedx --target all --spec-version 1.3 -f json --override-filename cargo.cdx && mv cargo.cdx.json dependencies/'
             alias nix-graph='nixgraph ./result/ --depth=100 && cp -r graph.png dependencies/nix-graph.png'
             alias nix-sbom='sbomnix ./result --depth 100 --csv dependencies/nix-sbom.csv --cdx dependencies/nix-sbom.cdx.json --spdx dependencies/nix-sbom.spdx.json && rm http_cache.sqlite'
-            alias nix-vuln='vulnxscan --sbom dependencies/nix-sbom.cdx.json --out dependencies/nix-vulns.csv && rm http_cache.sqlite'
-            alias cargo-vuln='vulnxscan --sbom dependencies/cargo.cdx.json --out dependencies/cargo-vulns.csv && rm http_cache.sqlite'
+            alias cargo-vuln='cargo audit -q > dependencies/cargo-vulns'
           '';
         };
       }
