@@ -45,7 +45,7 @@ jobs:
       # Push the built Docker image to the registry
       - name: Push Docker image
         run: |
-          skopeo copy oci:docker-result docker://${{ env.REGISTRY }}/${{ env.IMAGE_NAME | toLower}}:latest
+          skopeo copy oci:docker-result docker://${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}:latest
         env:
           IMAGE_NAME: ${{ env.IMAGE_NAME}}
           REGISTRY: ${{ env.REGISTRY}}
