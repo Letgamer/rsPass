@@ -55,25 +55,3 @@ jobs:
           IMAGE_NAME: ${{ env.IMAGE_NAME}}
           REGISTRY: ${{ env.REGISTRY}}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # Install Cosign
-      - name: Install Cosign
-        run: |
-          curl -Lo cosign https://github.com/sigstore/cosign/releases/latest/download/cosign-linux-amd64
-          chmod +x cosign
-          sudo mv cosign /usr/local/bin/
-
-      # Authenticate Cosign with Docker
-      - name: Authenticate Cosign
-        run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | cosign set-sigstore-token
-
-      # Sign the resulting Docker image digest
-      - name: Sign the published Docker image
-        env:
-          TAGS: ${{ env.IMAGE_NAME}}
-        run: |
-          REGISTRY=$(echo "${{ env.REGISTRY }}" | tr '[:upper:]' '[:lower:]')
-          IMAGE_NAME=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
-          DIGEST=$(skopeo inspect docker://${REGISTRY}/${IMAGE_NAME}:latest --format "{{.Digest}}")
-          echo "${IMAGE_NAME}" | xargs -I {} cosign sign --yes {}@${DIGEST}
