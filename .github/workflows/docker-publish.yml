@@ -47,7 +47,7 @@ jobs:
         run: |
           REGISTRY=$(echo "${{ env.REGISTRY }}" | tr '[:upper:]' '[:lower:]')
           IMAGE_NAME=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
-          skopeo copy oci:docker-result docker://${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}:latest
+          skopeo copy oci:docker-result docker://${REGISTRY}/${IMAGE_NAME}:latest
         env:
           IMAGE_NAME: ${{ env.IMAGE_NAME}}
           REGISTRY: ${{ env.REGISTRY}}
