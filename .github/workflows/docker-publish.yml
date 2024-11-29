@@ -63,6 +63,11 @@ jobs:
           chmod +x cosign
           sudo mv cosign /usr/local/bin/
 
+      # Authenticate Cosign with Docker
+      - name: Authenticate Cosign
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | cosign set-sigstore-token
+
       # Sign the resulting Docker image digest
       - name: Sign the published Docker image
         env:
