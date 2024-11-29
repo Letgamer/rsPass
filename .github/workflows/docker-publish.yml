@@ -44,7 +44,6 @@ jobs:
         run: |
           ls -la ./docker-result
           ls -la ./docker-image
-          ls -l ./docker-image/docker-result
 
       # Log into the Docker registry
       - name: Log into registry ${{ env.REGISTRY }}
@@ -59,7 +58,7 @@ jobs:
         run: |
           REGISTRY=$(echo "${{ env.REGISTRY }}" | tr '[:upper:]' '[:lower:]')
           IMAGE_NAME=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
-          skopeo copy oci:./docker-image/docker-result docker://${REGISTRY}/${IMAGE_NAME}:latest
+          skopeo copy oci:./docker-image docker://${REGISTRY}/${IMAGE_NAME}:latest
         env:
           IMAGE_NAME: ${{ env.IMAGE_NAME}}
           REGISTRY: ${{ env.REGISTRY}}
