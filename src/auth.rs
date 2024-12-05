@@ -96,7 +96,7 @@ impl JwtAuth {
         let token_data = decode::<Claims>(token, &self.decoding_key, &validation)?;
         let email = &token_data.claims.sub;
         info!("validate_token email: {}", email);
-        match user_exists(&email) {
+        match user_exists(email) {
             Ok(true) => Ok(token_data.claims),
             Ok(false) | Err(_) => Err(JwtError::from(
                 jsonwebtoken::errors::ErrorKind::InvalidToken,

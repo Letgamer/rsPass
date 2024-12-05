@@ -31,7 +31,7 @@ fn handle_db_error(e: impl std::fmt::Display) -> HttpResponse {
 
 // Helper to validate json format
 fn validate_format<T: Validate>(req_body: &web::Json<T>) -> Result<(), HttpResponse> {
-    if let Err(_) = req_body.validate() {
+    if req_body.validate().is_err() {
         error!("Validation failed for input");
         return Err(HttpResponse::BadRequest().finish());
     }
@@ -199,10 +199,10 @@ pub async fn route_logout(auth: BearerAuth, jwt_auth: web::Data<JwtAuth>) -> imp
     let token = auth.token();
     debug!("Logging with token: {}", token);
 
-    if jwt_auth.is_blacklisted(&token) {
+    if jwt_auth.is_blacklisted(token) {
         return HttpResponse::Unauthorized().finish();
     }
-    jwt_auth.blacklist_token(&token);
+    jwt_auth.blacklist_token(token);
     HttpResponse::Ok().finish()
 }
 
@@ -228,7 +228,7 @@ pub async fn route_delete(
     let token = auth.token();
     debug!("Deleting account with token: {}", token);
 
-    jwt_auth.blacklist_token(&token);
+    jwt_auth.blacklist_token(token);
 
     if let Some(claims) = req.extensions_mut().get::<Claims>() {
         info!("Deleting account of: {}", &claims.sub);
