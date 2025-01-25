@@ -4,7 +4,7 @@ use jsonwebtoken::{
     decode, encode, errors::Error as JwtError, DecodingKey, EncodingKey, Header, Validation,
 };
 use log::{debug, info, warn};
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashSet,
@@ -17,7 +17,7 @@ use uuid::Uuid;
 use crate::db::user_exists;
 
 // Store blacklisted tokens
-static BLACKLIST: Lazy<Mutex<HashSet<String>>> = Lazy::new(|| Mutex::new(HashSet::new()));
+static BLACKLIST: LazyLock<Mutex<HashSet<String>>> = LazyLock::new(|| Mutex::new(HashSet::new()));
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
