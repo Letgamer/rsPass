@@ -2,9 +2,9 @@
   "bomFormat": "CycloneDX",
   "specVersion": "1.4",
   "version": 1,
-  "serialNumber": "urn:uuid:0b526d4c-98c4-472d-aa48-a25cdc02a226",
+  "serialNumber": "urn:uuid:9b7d6a2a-e8ad-4282-a30a-31a32aa7f07b",
   "metadata": {
-    "timestamp": "2024-11-29T00:32:49.730886+01:00",
+    "timestamp": "2025-01-25T15:33:18.028064+01:00",
     "properties": [
       {
         "name": "sbom_type",
@@ -24,7 +24,7 @@
     ],
     "component": {
       "type": "library",
-      "bom-ref": "/nix/store/icfizg913x6cli9jpz70ypxzagl5siqd-backend_rspass-0.1.0.drv",
+      "bom-ref": "/nix/store/3n3g13kmmlh8y7c2713md3fmvhn2mx48-backend_rspass-0.1.0.drv",
       "name": "backend_rspass",
       "version": "0.1.0",
       "purl": "pkg:nix/backend_rspass@0.1.0",
@@ -32,11 +32,11 @@
       "properties": [
         {
           "name": "nix:output_path",
-          "value": "/nix/store/y822k8119xrz6k89v5a7ka75gknd03am-backend_rspass-0.1.0"
+          "value": "/nix/store/7nccrayd3g2ljyzayz014xf545d5hm0b-backend_rspass-0.1.0"
         },
         {
           "name": "nix:drv_path",
-          "value": "/nix/store/icfizg913x6cli9jpz70ypxzagl5siqd-backend_rspass-0.1.0.drv"
+          "value": "/nix/store/3n3g13kmmlh8y7c2713md3fmvhn2mx48-backend_rspass-0.1.0.drv"
         }
       ]
     }
@@ -197,7 +197,7 @@
   ],
   "dependencies": [
     {
-      "ref": "/nix/store/icfizg913x6cli9jpz70ypxzagl5siqd-backend_rspass-0.1.0.drv",
+      "ref": "/nix/store/3n3g13kmmlh8y7c2713md3fmvhn2mx48-backend_rspass-0.1.0.drv",
       "dependsOn": [
         "/nix/store/d501c7jfvisxah7bpaw3a7lx0z1l26qn-gcc-13.3.0.drv",
         "/nix/store/nxxwgq50lc44h9jb92d7wpya8dzdyv4f-glibc-2.40-36.drv"
