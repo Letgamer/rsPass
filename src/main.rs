@@ -1,7 +1,7 @@
 use actix_cors::Cors;
 use actix_web::{middleware::Logger, web, App, HttpServer};
 use actix_web_httpauth::middleware::HttpAuthentication;
-use dotenv::dotenv;
+use dotenvy::dotenv;
 use env_logger::Env;
 use log::info;
 use std::{env, sync::Arc};
