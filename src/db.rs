@@ -41,64 +41,81 @@ pub fn initialize_database() -> Result<()> {
 }
 
 pub fn user_exists(email: &str) -> Result<bool> {
-    let conn = get_connection()?;
-    let exists: bool = conn.query_row(
+    let mut conn = get_connection()?;
+    let tx = conn.transaction()?;
+    let exists: bool = tx.query_row(
         "SELECT EXISTS(SELECT 1 FROM users WHERE email = ?1)",
         params![email],
         |row| row.get(0),
     )?;
+    tx.commit()?;
     Ok(exists)
 }
 
 pub fn user_login(email: &str, password_hash: &str) -> Result<bool> {
-    let conn = get_connection()?;
-    let exists: bool = conn.query_row(
-        "SELECT EXISTS(SELECT 1 FROM users WHERE email = ?1 AND password_hash = ?2)",
+    let mut conn = get_connection()?;
+    let tx = conn.transaction()?;
+    let exists: bool = tx.query_row(
+        "SELECT EXISTS(SELECT 1 FROM users WHERE email = ?1 AND password_hash = ?2)", 
         params![email, password_hash],
         |row| row.get(0),
     )?;
+    tx.commit()?;
     Ok(exists)
 }
 
 pub fn user_register(email: &str, password_hash: &str) -> Result<()> {
-    let conn = get_connection()?;
-    conn.execute(
+    let mut conn = get_connection()?;
+    let tx = conn.transaction()?;
+    tx.execute(
         "INSERT INTO users (email, password_hash) VALUES (?1, ?2)",
         params![email, password_hash],
     )?;
+    tx.commit()?;
     Ok(())
 }
 
 pub fn user_changepwd(email: &str, password_hash: &str) -> Result<()> {
-    let conn = get_connection()?;
-    conn.execute(
+    let mut conn = get_connection()?;
+    let tx = conn.transaction()?;
+    tx.execute(
         "UPDATE users SET password_hash = ?1 WHERE email = ?2",
         params![password_hash, email],
     )?;
+    tx.commit()?;
     Ok(())
 }
 
 pub fn user_delete(email: &str) -> Result<()> {
-    let conn = get_connection()?;
-    conn.execute("DELETE FROM users WHERE email = ?1", params![email])?;
+    let mut conn = get_connection()?;
+    let tx = conn.transaction()?;
+    tx.execute(
+        "DELETE FROM users WHERE email = ?1", 
+        params![email]
+    )?;
+    tx.commit()?;
     Ok(())
 }
 
 pub fn data_get(email: &str) -> Result<String> {
-    let conn = get_connection()?;
-    let encrypted_data: String = conn.query_row(
+    let mut conn = get_connection()?;
+    let tx = conn.transaction()?;
+    let encrypted_data: String = tx.query_row(
         "SELECT encrypted_data FROM users WHERE email = ?1",
         params![email],
         |row| row.get(0),
     )?;
+    tx.commit()?;
     Ok(encrypted_data)
 }
 
 pub fn data_update(email: &str, encrypted_data: &str) -> Result<()> {
-    let conn = get_connection()?;
-    conn.execute(
+    let mut conn = get_connection()?;
+    let tx = conn.transaction()?;
+    tx.execute(
         "UPDATE users SET encrypted_data = ?1 WHERE email = ?2",
         params![encrypted_data, email],
     )?;
+    tx.commit()?;  
     Ok(())
 }
